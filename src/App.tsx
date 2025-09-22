@@ -1,11 +1,11 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProjectProvider, useProject } from './contexts/ProjectContext';
-import AuthScreen from './components/auth/AuthScreen';
-import AdminDashboard from './components/dashboard/AdminDashboard';
-import ClientDashboard from './components/dashboard/ClientDashboard';
-import ProjectDashboard from './components/project/ProjectDashboard';
-import Header from './components/layout/Header';
+import AuthScreen from './pages/auth/AuthScreen';
+import AdminDashboard from './pages/dashboard/AdminDashboard';
+import ClientDashboard from './pages/dashboard/ClientDashboard';
+import ProjectDashboard from './pages/project/ProjectDashboard';
+import Header from './layout/Header';
 
 const AppContent: React.FC = () => {
   const { user, isAuthenticated, loading } = useAuth();
