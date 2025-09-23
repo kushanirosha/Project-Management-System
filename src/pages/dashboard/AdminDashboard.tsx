@@ -2,8 +2,10 @@ import React from 'react';
 import { Calendar, User, Folder, Clock } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { projects, setSelectedProject } = useProject();
   const { user } = useAuth();
 
@@ -15,7 +17,7 @@ const AdminDashboard: React.FC = () => {
     const now = new Date();
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return 'Overdue';
     if (diffDays === 0) return 'Due today';
     if (diffDays === 1) return 'Due tomorrow';
@@ -31,7 +33,7 @@ const AdminDashboard: React.FC = () => {
     const now = new Date();
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return 'text-red-600';
     if (diffDays <= 3) return 'text-orange-600';
     return 'text-green-600';
@@ -69,7 +71,7 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
@@ -81,7 +83,7 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -95,7 +97,7 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
@@ -116,7 +118,10 @@ const AdminDashboard: React.FC = () => {
             {ongoingProjects.map((project) => (
               <div
                 key={project.id}
-                onClick={() => setSelectedProject(project)}
+                onClick={() => {
+                  setSelectedProject(project);
+                  navigate(`/project-dashboard/${project.id}`);
+                }}
                 className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer p-6"
               >
                 <div className="flex items-start justify-between mb-4">
@@ -125,20 +130,20 @@ const AdminDashboard: React.FC = () => {
                     {project.category}
                   </span>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center text-sm text-gray-600">
                     <User className="h-4 w-4 mr-2" />
                     <span>{project.client.name}</span>
                   </div>
-                  
+
                   <div className="flex items-center text-sm">
                     <Calendar className="h-4 w-4 mr-2" />
                     <span className={getDeadlineColor(project.deadline)}>
                       {formatDeadline(project.deadline)}
                     </span>
                   </div>
-                  
+
                   <div className="pt-2">
                     <div className="flex justify-between text-sm text-gray-600 mb-1">
                       <span>Progress</span>
@@ -186,7 +191,10 @@ const AdminDashboard: React.FC = () => {
                     {finishedProjects.slice(0, 5).map((project) => (
                       <tr
                         key={project.id}
-                        onClick={() => setSelectedProject(project)}
+                        onClick={() => {
+                          setSelectedProject(project);
+                          navigate(`/project-dashboard/${project.id}`);
+                        }}
                         className="hover:bg-gray-50 cursor-pointer transition-colors"
                       >
                         <td className="px-6 py-4 whitespace-nowrap">

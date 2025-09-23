@@ -1,15 +1,17 @@
-import React from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ProjectProvider, useProject } from './contexts/ProjectContext';
-import AuthScreen from './pages/auth/AuthScreen';
-import AdminDashboard from './pages/dashboard/AdminDashboard';
-import ClientDashboard from './pages/dashboard/ClientDashboard';
-import ProjectDashboard from './pages/project/ProjectDashboard';
-import Header from './layout/Header';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ProjectProvider } from "./contexts/ProjectContext";
 
-const AppContent: React.FC = () => {
-  const { user, isAuthenticated, loading } = useAuth();
-  const { selectedProject, setSelectedProject } = useProject();
+import AuthScreen from "./pages/auth/AuthScreen";
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import ClientDashboard from "./pages/dashboard/ClientDashboard";
+import ProjectDashboard from "./pages/project/ProjectDashboard";
+import CreateProject from "./pages/project/Createproject";
+import Header from "./layout/Header";
+
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -23,25 +25,63 @@ const AppContent: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return <AuthScreen />;
+    return <Navigate to="/" replace />;
   }
 
-  if (selectedProject) {
-    return (
-      <ProjectDashboard
-        project={selectedProject}
-        onBack={() => setSelectedProject(null)}
-      />
-    );
-  }
+  return <>{children}</>;
+};
+
+const AppContent: React.FC = () => {
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header />
-      <main>
-        {user?.role === 'admin' ? <AdminDashboard /> : <ClientDashboard />}
-      </main>
-    </div>
+    <Routes>
+      {/* Public Route */}
+      <Route path="/" element={<AuthScreen />} />
+
+      {/* Protected Routes */}
+      <Route
+        path="/create-project"
+        element={
+          <PrivateRoute>
+            <CreateProject />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/client-dashboard"
+        element={
+          <PrivateRoute>
+            <div className="min-h-screen bg-gray-100">
+              <Header />
+              <ClientDashboard />
+            </div>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/admin-dashboard"
+        element={
+          <PrivateRoute>
+            <div className="min-h-screen bg-gray-100">
+              <Header />
+              <AdminDashboard />
+            </div>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/project-dashboard/:projectId"
+        element={
+          <PrivateRoute>
+            <ProjectDashboard />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 };
 
@@ -49,7 +89,9 @@ function App() {
   return (
     <AuthProvider>
       <ProjectProvider>
-        <AppContent />
+        <Router>
+          <AppContent />
+        </Router>
       </ProjectProvider>
     </AuthProvider>
   );

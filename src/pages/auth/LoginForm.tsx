@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginFormProps {
   onToggleForm: (form: 'login' | 'register' | 'forgot') => void;
@@ -14,6 +15,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +26,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
       const success = await login(email, password);
       if (!success) {
         setError('Invalid email or password');
+      } else {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (storedUser.role === 'admin') {
+          navigate('/admin-dashboard');
+        } else if (storedUser.role === 'client') {
+          navigate('/client-dashboard');
+        }
       }
     } catch (err) {
       setError('An error occurred during login');
