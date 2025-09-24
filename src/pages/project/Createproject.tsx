@@ -58,14 +58,57 @@ const CreateProject: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Here you can call backend API to save project
-    console.log("Submitted Data:", formData);
+    // Get logged-in user
+    const storedUser = localStorage.getItem("user");
+    const client = storedUser ? JSON.parse(storedUser) : null;
 
-    // ✅ After saving → redirect client to dashboard
-    navigate("/client-dashboard");
+    if (!client || client.role !== "client") {
+      alert("Only clients can create projects!");
+      return;
+    }
+
+    // Check if account is newly created (e.g., within 7 days)
+    const createdAt = new Date(client.createdAt);
+    const now = new Date();
+    const diffDays = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays > 7) {
+      alert("Only newly created accounts can create projects!");
+      return;
+    }
+
+    const payload = {
+      topic: formData.topic,
+      description: formData.description,
+      resources: {
+        images: formData.resources.images.map((file) => file.name),
+        documents: formData.resources.documents.map((file) => file.name),
+        links: formData.resources.links,
+      },
+      deadline: formData.deadline,
+      category: formData.category,
+      clientId: client.id, // save registered client’s id
+    };
+
+    try {
+      const res = await fetch("http://localhost:5000/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Failed to save project");
+
+      const data = await res.json();
+      console.log("Saved Project ✅:", data);
+
+      navigate("/client-dashboard"); // redirect after save
+    } catch (err) {
+      console.error("Error saving project:", err);
+      alert("Something went wrong!");
+    }
   };
 
   return (
@@ -89,7 +132,6 @@ const CreateProject: React.FC = () => {
         >
           {/* Left Column */}
           <div className="space-y-6">
-            {/* Project Topic */}
             <div>
               <label className="block text-[#3c405b] font-medium mb-2">
                 Project Topic
@@ -105,7 +147,6 @@ const CreateProject: React.FC = () => {
               />
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-[#3c405b] font-medium mb-2">
                 Description
@@ -120,7 +161,6 @@ const CreateProject: React.FC = () => {
               />
             </div>
 
-            {/* Deadline */}
             <div>
               <label className="block text-[#3c405b] font-medium mb-2">
                 Deadline
@@ -135,7 +175,6 @@ const CreateProject: React.FC = () => {
               />
             </div>
 
-            {/* Category */}
             <div>
               <label className="block text-[#3c405b] font-medium mb-2">
                 Project Category
@@ -154,11 +193,8 @@ const CreateProject: React.FC = () => {
 
           {/* Right Column - Resources */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-[#3c405b] mb-4">
-              Resources
-            </h2>
+            <h2 className="text-xl font-semibold text-[#3c405b] mb-4">Resources</h2>
 
-            {/* Image Upload */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
                 <Image className="w-5 h-5 text-[#3c405b]" />
@@ -175,7 +211,6 @@ const CreateProject: React.FC = () => {
               />
             </div>
 
-            {/* Document Upload */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
                 <FileUp className="w-5 h-5 text-[#3c405b]" />
@@ -192,7 +227,6 @@ const CreateProject: React.FC = () => {
               />
             </div>
 
-            {/* Links */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
                 <Link className="w-5 h-5 text-[#3c405b]" />
@@ -218,7 +252,7 @@ const CreateProject: React.FC = () => {
             </div>
           </div>
 
-          {/* Submit Button (Full Width) */}
+          {/* Submit Button */}
           <div className="md:col-span-2">
             <button
               type="submit"

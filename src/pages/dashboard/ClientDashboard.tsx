@@ -40,14 +40,6 @@ const ClientDashboard: React.FC = () => {
     return 'text-green-600';
   };
 
-  const totalAmount = clientProjects.reduce((sum, project) =>
-    sum + project.payments.reduce((pSum, payment) => pSum + payment.amount, 0), 0
-  );
-
-  const paidAmount = clientProjects.reduce((sum, project) =>
-    sum + project.payments.filter(p => p.status === 'paid').reduce((pSum, payment) => pSum + payment.amount, 0), 0
-  );
-
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="bg-white shadow-sm border-b">
@@ -56,11 +48,6 @@ const ClientDashboard: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-[#3c405b]">Welcome back, {user?.name}</h1>
               <p className="text-gray-600 mt-1">Track your projects and collaborate with designers</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="bg-blue-50 px-4 py-2 rounded-lg">
-                <span className="text-blue-600 font-medium">{ongoingProjects.length} Active Projects</span>
-              </div>
             </div>
           </div>
         </div>
@@ -112,7 +99,7 @@ const ClientDashboard: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Paid</p>
-                <p className="text-2xl font-bold text-[#3c405b]">${paidAmount.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-[#3c405b]">N/A</p>
               </div>
             </div>
           </div>
@@ -168,19 +155,14 @@ const ClientDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    {project.payments.length > 0 && (
-                      <div className="pt-2 border-t">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600">Payment Status</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.payments.every(p => p.status === 'paid')
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                            }`}>
-                            {project.payments.every(p => p.status === 'paid') ? 'Paid' : 'Pending'}
-                          </span>
-                        </div>
+                    <div className="pt-2 border-t">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Payment Status</span>
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                          N/A
+                        </span>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -189,9 +171,15 @@ const ClientDashboard: React.FC = () => {
         </div>
 
         {/* Completed Projects */}
-        {finishedProjects.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold text-[#3c405b] mb-6">Completed Projects</h2>
+        <h2 className="text-2xl font-bold text-[#3c405b] mb-6">Completed Projects</h2>
+        {finishedProjects.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
+              <Folder className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-600 mb-2">No Past projects</h3>
+              <p className="text-gray-500">You don't have any past projects at the moment.</p>
+            </div>
+          ) : (
+          <div>  
             <div className="bg-white rounded-lg shadow-sm border">
               <div className="overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -233,7 +221,7 @@ const ClientDashboard: React.FC = () => {
                           {new Date(project.deadline).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          ${project.payments.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+                          N/A
                         </td>
                       </tr>
                     ))}

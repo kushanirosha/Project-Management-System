@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useNavigate } from "react-router-dom"; // ⬅️ add this
+import { useNavigate } from "react-router-dom"; 
 
 interface RegisterFormProps {
   onToggleForm: (form: "login" | "register" | "forgot") => void;
@@ -13,7 +13,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleForm }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "client">("client");
+  const [role] = useState("client");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
@@ -101,21 +101,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleForm }) => {
               required
             />
           </div>
-        </div>
-
-        {/* Role */}
-        <div>
-          <label className="block text-sm font-medium text-[#2E3453] mb-1">
-            Role
-          </label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as "admin" | "client")}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          >
-            <option value="client">Client</option>
-            <option value="admin">Admin</option>
-          </select>
         </div>
 
         {/* Password */}

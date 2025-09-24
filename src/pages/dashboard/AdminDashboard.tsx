@@ -46,7 +46,7 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between py-6">
             <div>
               <h1 className="text-3xl font-bold text-[#3c405b]">Welcome back, {user?.name}</h1>
-              <p className="text-gray-600 mt-1">Manage your design projects and clients</p>
+              <p className="text-gray-600 mt-1">Manage all clients' design projects</p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="bg-blue-50 px-4 py-2 rounded-lg">
@@ -164,7 +164,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Recent Projects */}
+        {/* Recently Completed */}
         {finishedProjects.length > 0 && (
           <div>
             <h2 className="text-2xl font-bold text-[#3c405b] mb-6">Recently Completed</h2>

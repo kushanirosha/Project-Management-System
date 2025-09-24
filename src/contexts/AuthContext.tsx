@@ -46,45 +46,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    const user = dummyUsers.find(u => u.email === email);
-    
-    if (user && password === 'password123') { // Demo password
-      localStorage.setItem('user', JSON.stringify(user));
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        loading: false
-      });
-      return true;
-    }
-    return false;
-  };
-
-  const register = async (name: string, email: string, password: string, role: 'admin' | 'client'): Promise<boolean> => {
-    // Simulate API call
-    const existingUser = dummyUsers.find(u => u.email === email);
-    if (existingUser) {
-      return false; // User already exists
-    }
-
-    const newUser: User = {
-      id: `${role}-${Date.now()}`,
-      name,
-      email,
-      role,
-      avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
-    };
-
-    dummyUsers.push(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    setAuthState({
-      user: newUser,
-      isAuthenticated: true,
-      loading: false
+  try {
+    const res = await fetch("http://localhost:5000/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
     });
+
+    if (!res.ok) return false;
+    const user = await res.json();
+
+    localStorage.setItem("user", JSON.stringify(user));
+    setAuthState({ user, isAuthenticated: true, loading: false });
     return true;
-  };
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+};
+
+const register = async (name: string, email: string, password: string, role: 'admin' | 'client'): Promise<boolean> => {
+  try {
+    const res = await fetch("http://localhost:5000/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role })
+    });
+
+    if (!res.ok) return false;
+    const user = await res.json(); // includes 'id'
+
+    localStorage.setItem("user", JSON.stringify(user));
+    setAuthState({ user, isAuthenticated: true, loading: false });
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+};
 
   const logout = () => {
     localStorage.removeItem('user');
