@@ -283,23 +283,16 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, tasks }) => {
                   rows={3}
                 />
                 <div className="flex justify-end space-x-2">
+
                   <button
-                    onClick={() => handleAddComment(selectedTask.id, 'comment')}
-                    className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-                  >
-                    Comment
-                  </button>
-                  <button
-                    onClick={() => handleAddComment(selectedTask.id, 'change_request')}
                     className="px-3 py-1 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-colors text-sm"
                   >
-                    Request Changes
+                    Cancel
                   </button>
                   <button
-                    onClick={() => handleAddComment(selectedTask.id, 'approval')}
                     className="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors text-sm"
                   >
-                    Approve
+                    Save
                   </button>
                 </div>
               </div>

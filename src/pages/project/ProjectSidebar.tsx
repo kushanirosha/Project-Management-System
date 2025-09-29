@@ -1,20 +1,21 @@
 import React from 'react';
 import { User, Mail, Calendar, Tag, ArrowLeft } from 'lucide-react';
 import { Project } from '../../types';
+import { useNavigate } from 'react-router-dom';
 
 interface ProjectSidebarProps {
   project: Project;
   activeTab: 'project' | 'payment' | 'chat';
   onTabChange: (tab: 'project' | 'payment' | 'chat') => void;
-  onBack: () => void;
 }
 
 const ProjectSidebar: React.FC<ProjectSidebarProps> = ({ 
   project, 
   activeTab, 
-  onTabChange, 
-  onBack 
+  onTabChange
 }) => {
+  const navigate = useNavigate();
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -31,12 +32,26 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
     return status === 'ongoing' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
   };
 
+  // ✅ Handle back based on role
+  const handleBack = () => {
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (user?.role === "client") {
+      navigate("/client-dashboard");
+    } else if (user?.role === "admin") {
+      navigate("/admin-dashboard");
+    } else {
+      navigate("/"); // fallback
+    }
+  };
+
   return (
     <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <button
-          onClick={onBack}
+          onClick={handleBack}
           className="flex items-center text-gray-600 hover:text-[#3c405b] transition-colors mb-4"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />

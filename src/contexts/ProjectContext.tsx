@@ -35,7 +35,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     const fetchProjects = async () => {
       if (!user) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/projects?clientId=${user.id}`);
+        const res = await fetch(`http://localhost:5000/api/projects/client?clientId=${user.id}`);
         const data: Project[] = await res.json();
 
         // Ensure payments field exists (since database doesn't have it yet)

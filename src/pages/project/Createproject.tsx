@@ -66,15 +66,6 @@ const CreateProject: React.FC = () => {
     const client = storedUser ? JSON.parse(storedUser) : null;
 
     if (!client || client.role !== "client") {
-      alert("Only clients can create projects!");
-      return;
-    }
-
-    // Check if account is newly created (e.g., within 7 days)
-    const createdAt = new Date(client.createdAt);
-    const now = new Date();
-    const diffDays = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-    if (diffDays > 7) {
       alert("Only newly created accounts can create projects!");
       return;
     }
