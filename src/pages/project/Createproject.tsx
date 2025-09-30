@@ -58,49 +58,59 @@ const CreateProject: React.FC = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    // Get logged-in user
-    const storedUser = localStorage.getItem("user");
-    const client = storedUser ? JSON.parse(storedUser) : null;
+  const storedUser = localStorage.getItem("user");
+  const client = storedUser ? JSON.parse(storedUser) : null;
 
-    if (!client || client.role !== "client") {
-      alert("Only newly created accounts can create projects!");
-      return;
-    }
+  if (!client || client.role !== "client") {
+    alert("Only newly created accounts can create projects!");
+    return;
+  }
 
-    const payload = {
-      topic: formData.topic,
-      description: formData.description,
-      resources: {
-        images: formData.resources.images.map((file) => file.name),
-        documents: formData.resources.documents.map((file) => file.name),
-        links: formData.resources.links,
-      },
-      deadline: formData.deadline,
-      category: formData.category,
-      clientId: client.id, // save registered client’s id
-    };
-
-    try {
-      const res = await fetch("http://localhost:5000/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Failed to save project");
-
-      const data = await res.json();
-      console.log("Saved Project ✅:", data);
-
-      navigate("/client-dashboard"); // redirect after save
-    } catch (err) {
-      console.error("Error saving project:", err);
-      alert("Something went wrong!");
-    }
+  // Payload for backend
+  const payload = {
+    topic: formData.topic,
+    description: formData.description,
+    resources: {
+      images: formData.resources.images.map((file) => file.name),
+      documents: formData.resources.documents.map((file) => file.name),
+      links: formData.resources.links,
+    },
+    deadline: formData.deadline,
+    category: formData.category,
+    clientId: client.id, // this will be used by backend
   };
+
+  try {
+    const res = await fetch("http://localhost:5000/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) throw new Error("Failed to save project");
+
+    const data = await res.json();
+    console.log("Saved Project ✅:", data);
+
+    // Optional: reset form after success
+    setFormData({
+      topic: "",
+      description: "",
+      resources: { images: [], documents: [], links: [] },
+      deadline: "",
+      category: "web",
+    });
+
+    navigate("/client-dashboard");
+  } catch (err) {
+    console.error("Error saving project:", err);
+    alert("Something went wrong!");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-600">
