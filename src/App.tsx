@@ -9,7 +9,6 @@ import ClientDashboard from "./pages/dashboard/ClientDashboard";
 import ProjectDashboard from "./pages/project/ProjectDashboard";
 import CreateProject from "./pages/project/Createproject";
 import Header from "./layout/Header";
-import PaymentTab from "./pages/project/PaymentTab";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -79,24 +78,6 @@ const AppContent: React.FC = () => {
           </PrivateRoute>
         }
       />
-      {/* <Route
-        path="/project-dashboard/payment/:projectId"
-        element={
-          <PrivateRoute>
-            <PaymentTab/>
-          </PrivateRoute>
-        }
-      /> */}
-
-      <Route
-        path="/project-dashboard/:projectId/chat"
-        element={
-          <PrivateRoute>
-            <ProjectDashboard defaultTab="chat" />
-          </PrivateRoute>
-        }
-      />
-
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />

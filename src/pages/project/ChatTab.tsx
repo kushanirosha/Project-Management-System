@@ -17,10 +17,11 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Corrected user object to match localStorage keys
   const user = {
-    id: localStorage.getItem("userId") || "temp-id",
-    name: localStorage.getItem("userName") || "User",
-    role: localStorage.getItem("userRole") || "client",
+    id: localStorage.getItem("id") || "temp-id",
+    name: localStorage.getItem("name") || "User",
+    role: localStorage.getItem("role") || "client",
   };
 
   const fetchMessages = async () => {
@@ -28,7 +29,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
       const res = await axios.get(`${API_URL}/${projectId}/messages`);
       setMessages(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Failed to fetch messages:", err);
     }
   };
 
@@ -48,7 +49,8 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
     formData.append("senderId", user.id);
     formData.append("senderName", user.name);
     formData.append("senderRole", user.role);
-    formData.append("type", "text");
+
+    if (!file) formData.append("type", "text");
     if (replyTo) formData.append("replyTo", replyTo);
     if (file) formData.append("file", file);
 
@@ -56,12 +58,13 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
       await axios.post(`${API_URL}/${projectId}/messages`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+
       setNewMessage("");
       setFile(null);
       setReplyTo(null);
       fetchMessages();
     } catch (err) {
-      console.error(err);
+      console.error("❌ Failed to send message:", err);
     }
   };
 
@@ -100,7 +103,6 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
 
   const groupedMessages = groupMessagesByDate(messages);
   const replyToMessage = messages.find((m) => m._id === replyTo);
-
   const lastMessageTime = messages.length ? messages[messages.length - 1].createdAt : null;
 
   return (
