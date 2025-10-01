@@ -21,7 +21,7 @@ const CreateProject: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (
@@ -29,103 +29,106 @@ const CreateProject: React.FC = () => {
     type: "images" | "documents"
   ) => {
     if (e.target.files) {
-      setFormData({
-        ...formData,
+      setFormData((prev) => ({
+        ...prev,
         resources: {
-          ...formData.resources,
-          [type]: [...formData.resources[type], ...Array.from(e.target.files)],
+          ...prev.resources,
+          [type]: [...prev.resources[type], ...Array.from(e.target.files)],
         },
-      });
+      }));
     }
   };
 
   const handleAddLink = () => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       resources: {
-        ...formData.resources,
-        links: [...formData.resources.links, ""],
+        ...prev.resources,
+        links: [...prev.resources.links, ""],
       },
-    });
+    }));
   };
 
   const handleLinkChange = (index: number, value: string) => {
-    const newLinks = [...formData.resources.links];
-    newLinks[index] = value;
-    setFormData({
-      ...formData,
-      resources: { ...formData.resources, links: newLinks },
+    setFormData((prev) => {
+      const newLinks = [...prev.resources.links];
+      newLinks[index] = value;
+      return {
+        ...prev,
+        resources: { ...prev.resources, links: newLinks },
+      };
     });
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const storedUser = localStorage.getItem("user");
-  const client = storedUser ? JSON.parse(storedUser) : null;
+    const storedUser = localStorage.getItem("user");
+    const client = storedUser ? JSON.parse(storedUser) : null;
 
-  if (!client || client.role !== "client") {
-    alert("Only newly created accounts can create projects!");
-    return;
-  }
+    if (!client || client.role !== "client") {
+      alert("Only clients can create projects!");
+      return;
+    }
 
-  // Payload for backend
-  const payload = {
-    topic: formData.topic,
-    description: formData.description,
-    resources: {
-      images: formData.resources.images.map((file) => file.name),
-      documents: formData.resources.documents.map((file) => file.name),
-      links: formData.resources.links,
-    },
-    deadline: formData.deadline,
-    category: formData.category,
-    clientId: client.id, // this will be used by backend
+    const payload = {
+      topic: formData.topic,
+      description: formData.description,
+      resources: {
+        images: formData.resources.images.map((file) => file.name),
+        documents: formData.resources.documents.map((file) => file.name),
+        links: formData.resources.links,
+      },
+      deadline: formData.deadline,
+      category: formData.category,
+      clientId: client.id,
+    };
+
+    try {
+      const res = await fetch("http://localhost:5000/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to save project");
+      }
+
+      const data = await res.json();
+      console.log("✅ Saved Project:", data);
+
+      // Reset form after success
+      setFormData({
+        topic: "",
+        description: "",
+        resources: { images: [], documents: [], links: [] },
+        deadline: "",
+        category: "web",
+      });
+
+      navigate("/client-dashboard");
+    } catch (err) {
+      console.error("❌ Error saving project:", err);
+      alert("Something went wrong while creating the project!");
+    }
   };
-
-  try {
-    const res = await fetch("http://localhost:5000/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) throw new Error("Failed to save project");
-
-    const data = await res.json();
-    console.log("Saved Project ✅:", data);
-
-    // Optional: reset form after success
-    setFormData({
-      topic: "",
-      description: "",
-      resources: { images: [], documents: [], links: [] },
-      deadline: "",
-      category: "web",
-    });
-
-    navigate("/client-dashboard");
-  } catch (err) {
-    console.error("Error saving project:", err);
-    alert("Something went wrong!");
-  }
-};
-
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-600">
-      {/* Header Section */}
+      {/* Header */}
       <div className="bg-[#3c405b] text-white py-10 shadow-lg">
         <div className="max-w-6xl mx-auto px-6">
           <h1 className="text-4xl font-bold">Create a New Project</h1>
           <p className="mt-2 text-gray-200">
             Fill in the details below to add a new project, upload resources, and
-            set deadlines. Keep everything organized in one place.
+            set deadlines.
           </p>
         </div>
       </div>
 
-      {/* Form Section */}
+      {/* Form */}
       <div className="max-w-6xl mx-auto px-6 py-10">
         <form
           onSubmit={handleSubmit}
@@ -192,10 +195,11 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           </div>
 
-          {/* Right Column - Resources */}
+          {/* Right Column */}
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-[#3c405b] mb-4">Resources</h2>
 
+            {/* Images */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
                 <Image className="w-5 h-5 text-[#3c405b]" />
@@ -212,6 +216,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
             </div>
 
+            {/* Documents */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
                 <FileUp className="w-5 h-5 text-[#3c405b]" />
@@ -228,6 +233,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
             </div>
 
+            {/* Links */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
                 <Link className="w-5 h-5 text-[#3c405b]" />
@@ -253,7 +259,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <div className="md:col-span-2">
             <button
               type="submit"

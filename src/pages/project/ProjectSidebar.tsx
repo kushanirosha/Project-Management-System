@@ -47,7 +47,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
   };
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-screen">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <button

@@ -1,92 +1,147 @@
-import React, { useState } from 'react';
-import { DollarSign, Upload, Check, Clock, AlertCircle, Download } from 'lucide-react';
-import { Project, Payment } from '../../types';
-import { useProject } from '../../contexts/ProjectContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { bankDetails } from '../../data/dummyData';
+import React, { useState, useEffect } from "react";
+import { DollarSign, Upload, Check, Clock, AlertCircle, Download } from "lucide-react";
+import { Project, Payment } from "../../types";
+import { useAuth } from "../../contexts/AuthContext";
+import { bankDetails } from "../../data/dummyData";
+import { useParams } from "react-router-dom";
+
 
 interface PaymentTabProps {
   project: Project;
 }
 
+const API_URL = "http://localhost:5000/api/payments"; // backend
+
 const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
+  const { projectId } = useParams<{ projectId: string }>();
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [showUploadQuotation, setShowUploadQuotation] = useState(false);
-  const [showUploadReceipt, setShowUploadReceipt] = useState(false);
-  const [quotationData, setQuotationData] = useState({ amount: 0, description: '' });
+  const [showUploadReceipt, setShowUploadReceipt] = useState<string | null>(null);
 
-  const { updatePayment } = useProject();
+  const [quotationData, setQuotationData] = useState({
+    amount: 0,
+    description: "",
+    file: null as File | null,
+  });
+
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+
   const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
-  const isAdmin = user?.role === 'admin';
+ // Fetch payments from backend
+useEffect(() => {
+  if (!projectId) return;
+  
+  const fetchPayments = async () => {
+    try {
+      const res = await fetch(`${API_URL}?projectId=${projectId}`);
+      const data = await res.json();
+      setPayments(data);
+    } catch (err) {
+      console.error("❌ Error fetching payments", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchPayments();
+}, [projectId]);
 
-  const totalAmount = project.payments.reduce((sum, payment) => sum + payment.amount, 0);
-  const paidAmount = project.payments
-    .filter(payment => payment.status === 'paid')
-    .reduce((sum, payment) => sum + payment.amount, 0);
-  const remainingAmount = totalAmount - paidAmount;
 
-  const handleMarkAsPaid = (paymentId: string) => {
-    updatePayment(project.id, paymentId, {
-      status: 'paid',
-      paidAt: new Date().toISOString()
-    });
+  // ---------------- Admin Upload Quotation ----------------
+  const handleUploadQuotation = async () => {
+    if (!quotationData.file) return alert("Please select a quotation file");
+
+    const formData = new FormData();
+    formData.append("projectId", project._id);  // <-- use MongoDB ID
+    formData.append("amount", String(quotationData.amount));
+    formData.append("description", quotationData.description);
+    formData.append("quotation", quotationData.file);
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: formData,
+      });
+      const newPayment = await res.json();
+      setPayments((prev) => [...prev, newPayment]);
+
+      setShowUploadQuotation(false);
+      setQuotationData({ amount: 0, description: "", file: null });
+    } catch (err) {
+      console.error("❌ Error uploading quotation", err);
+    }
   };
 
-  const handleUploadQuotation = () => {
-    // In a real app, this would upload the file and create a payment
-    const newPayment: Payment = {
-      id: `payment-${Date.now()}`,
-      projectId: project.id,
-      amount: quotationData.amount,
-      status: 'pending',
-      quotationUrl: '/dummy-quotation.pdf',
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-    };
-    
-    // This would be handled by the project context
-    console.log('New payment created:', newPayment);
-    
-    setShowUploadQuotation(false);
-    setQuotationData({ amount: 0, description: '' });
+  // ---------------- Client Upload Receipt ----------------
+  const handleUploadReceipt = async (paymentId: string) => {
+    if (!receiptFile) return alert("Please select a receipt file");
+
+    const formData = new FormData();
+    formData.append("receipt", receiptFile);
+
+    try {
+      const res = await fetch(`${API_URL}/${paymentId}/receipt`, {
+        method: "PUT",
+        body: formData,
+      });
+      const updatedPayment = await res.json();
+
+      setPayments((prev) =>
+        prev.map((p) => (p.id === updatedPayment._id ? updatedPayment : p))
+      );
+
+      setShowUploadReceipt(null);
+      setReceiptFile(null);
+    } catch (err) {
+      console.error("❌ Error uploading receipt", err);
+    }
   };
 
-  const handleUploadReceipt = (paymentId: string) => {
-    updatePayment(project.id, paymentId, {
-      receiptUrl: '/dummy-receipt.pdf'
-    });
-    setShowUploadReceipt(false);
-  };
-
-  const getStatusIcon = (status: Payment['status']) => {
+  // ---------------- Status Helpers ----------------
+  const getStatusIcon = (status: Payment["status"]) => {
     switch (status) {
-      case 'paid':
+      case "paid":
         return <Check className="h-5 w-5 text-green-600" />;
-      case 'pending':
+      case "pending":
         return <Clock className="h-5 w-5 text-yellow-600" />;
-      case 'overdue':
+      case "overdue":
         return <AlertCircle className="h-5 w-5 text-red-600" />;
       default:
         return <Clock className="h-5 w-5 text-gray-600" />;
     }
   };
 
-  const getStatusColor = (status: Payment['status']) => {
+  const getStatusColor = (status: Payment["status"]) => {
     switch (status) {
-      case 'paid':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
+      case "paid":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "overdue":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
+
+  const paymentList = Array.isArray(payments) ? payments : [];
+  
+  const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const paidAmount = payments
+    .filter(payment => payment.status === 'paid')
+    .reduce((sum, payment) => sum + payment.amount, 0);
+  const remainingAmount = totalAmount - paidAmount;
+
+  if (loading) return <p>Loading payments...</p>;
 
   return (
     <div className="h-full overflow-y-auto">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Total */}
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -94,11 +149,11 @@ const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Amount</p>
-              <p className="text-2xl font-bold text-[#3c405b]">${totalAmount.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-[#3c405b]">${totalAmount}</p>
             </div>
           </div>
         </div>
-        
+        {/* Paid */}
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
@@ -106,11 +161,11 @@ const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Paid Amount</p>
-              <p className="text-2xl font-bold text-green-600">${paidAmount.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-green-600">${paidAmount}</p>
             </div>
           </div>
         </div>
-        
+        {/* Remaining */}
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <div className="p-2 bg-orange-100 rounded-lg">
@@ -118,7 +173,7 @@ const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Remaining</p>
-              <p className="text-2xl font-bold text-orange-600">${remainingAmount.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-orange-600">${remainingAmount}</p>
             </div>
           </div>
         </div>
@@ -128,22 +183,10 @@ const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
       <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
         <h3 className="text-lg font-semibold text-[#3c405b] mb-4">Bank Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Bank Name</p>
-            <p className="text-[#2E3453] font-medium">{bankDetails.bankName}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-600">Account Name</p>
-            <p className="text-[#2E3453] font-medium">{bankDetails.accountName}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-600">Account Number</p>
-            <p className="text-[#2E3453] font-medium">{bankDetails.accountNumber}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-600">Routing Number</p>
-            <p className="text-[#2E3453] font-medium">{bankDetails.routingNumber}</p>
-          </div>
+          <p><strong>Bank Name:</strong> {bankDetails.bankName}</p>
+          <p><strong>Account Name:</strong> {bankDetails.accountName}</p>
+          <p><strong>Account Number:</strong> {bankDetails.accountNumber}</p>
+          <p><strong>Routing Number:</strong> {bankDetails.routingNumber}</p>
         </div>
       </div>
 
@@ -154,15 +197,12 @@ const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
             <h3 className="text-lg font-semibold text-[#3c405b]">Admin Actions</h3>
             <button
               onClick={() => setShowUploadQuotation(true)}
-              className="flex items-center px-4 py-2 bg-[#3c405b] text-white rounded-lg hover:bg-[#2E3453] transition-colors"
+              className="flex items-center px-4 py-2 bg-[#3c405b] text-white rounded-lg hover:bg-[#2E3453]"
             >
               <Upload className="h-4 w-4 mr-2" />
               Upload Quotation
             </button>
           </div>
-          <p className="text-sm text-gray-600">
-            Upload quotations and mark payments as received to keep track of project finances.
-          </p>
         </div>
       )}
 
@@ -171,57 +211,62 @@ const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-[#3c405b]">Payments</h3>
         </div>
-        
         <div className="divide-y divide-gray-200">
-          {project.payments.length === 0 ? (
-            <div className="p-8 text-center">
-              <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h4 className="text-lg font-medium text-gray-600 mb-2">No payments yet</h4>
-              <p className="text-gray-500">Payments will appear here once quotations are uploaded.</p>
-            </div>
+          {paymentList.length === 0 ? (
+            <div className="p-8 text-center">No payments yet</div>
           ) : (
-            project.payments.map((payment) => (
-              <div key={payment.id} className="p-6">
+            payments.map((p) => (
+              <div key={p._id} className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
-                    {getStatusIcon(payment.status)}
+                    {getStatusIcon(p.status)}
                     <div className="ml-3">
-                      <p className="font-medium text-[#3c405b]">${payment.amount.toLocaleString()}</p>
+                      <p className="font-medium text-[#3c405b]">${p.amount}</p>
                       <p className="text-sm text-gray-600">
-                        Due: {new Date(payment.dueDate).toLocaleDateString()}
+                        Due: {new Date(p.dueDate).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(payment.status)}`}>
-                    {payment.status}
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(p.status)}`}
+                  >
+                    {p.status}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Quotation */}
-                  <div className="space-y-2">
+                  <div>
                     <p className="text-sm font-medium text-gray-600">Quotation</p>
-                    {payment.quotationUrl ? (
-                      <button className="flex items-center text-blue-600 hover:text-blue-800 text-sm">
+                    {p.quotationUrl ? (
+                      <a
+                        href={p.quotationUrl}
+                        target="_blank"
+                        className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
+                      >
                         <Download className="h-4 w-4 mr-1" />
                         View Quotation
-                      </button>
+                      </a>
                     ) : (
                       <p className="text-sm text-gray-500">Not uploaded</p>
                     )}
                   </div>
 
                   {/* Receipt */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600">Payment Receipt</p>
-                    {payment.receiptUrl ? (
-                      <button className="flex items-center text-blue-600 hover:text-blue-800 text-sm">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Receipt</p>
+                    {p.receiptUrl ? (
+                      <a
+                        href={p.receiptUrl}
+                        target="_blank"
+                        className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
+                      >
                         <Download className="h-4 w-4 mr-1" />
                         View Receipt
-                      </button>
-                    ) : !isAdmin && payment.status === 'pending' ? (
+                      </a>
+                    ) : !isAdmin && p.status === "pending" ? (
                       <button
-                        onClick={() => setShowUploadReceipt(true)}
+                        onClick={() => setShowUploadReceipt(p._id)}
                         className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
                       >
                         <Upload className="h-4 w-4 mr-1" />
@@ -232,21 +277,11 @@ const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
                     )}
                   </div>
 
-                  {/* Admin Action */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600">Action</p>
-                    {isAdmin && payment.status === 'pending' && payment.receiptUrl && (
-                      <button
-                        onClick={() => handleMarkAsPaid(payment.id)}
-                        className="flex items-center text-green-600 hover:text-green-800 text-sm"
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        Mark as Paid
-                      </button>
-                    )}
-                    {payment.paidAt && (
+                  {/* Paid Info */}
+                  <div>
+                    {p.paidAt && (
                       <p className="text-sm text-gray-500">
-                        Paid: {new Date(payment.paidAt).toLocaleDateString()}
+                        Paid: {new Date(p.paidAt).toLocaleDateString()}
                       </p>
                     )}
                   </div>
@@ -262,57 +297,31 @@ const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold text-[#3c405b] mb-4">Upload Quotation</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#2E3453] mb-1">
-                  Amount ($)
-                </label>
-                <input
-                  type="number"
-                  value={quotationData.amount}
-                  onChange={(e) => setQuotationData(prev => ({ ...prev, amount: Number(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter amount"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-[#2E3453] mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={quotationData.description}
-                  onChange={(e) => setQuotationData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={3}
-                  placeholder="Enter payment description"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-[#2E3453] mb-1">
-                  Quotation File
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">Upload PDF file</p>
-                  <input type="file" accept=".pdf" className="hidden" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setShowUploadQuotation(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUploadQuotation}
-                className="px-4 py-2 bg-[#3c405b] text-white rounded-lg hover:bg-[#2E3453] transition-colors"
-              >
+            <input
+              type="number"
+              placeholder="Amount"
+              value={quotationData.amount}
+              onChange={(e) =>
+                setQuotationData((prev) => ({ ...prev, amount: Number(e.target.value) }))
+              }
+              className="w-full border p-2 mb-3 rounded"
+            />
+            <textarea
+              placeholder="Description"
+              value={quotationData.description}
+              onChange={(e) =>
+                setQuotationData((prev) => ({ ...prev, description: e.target.value }))
+              }
+              className="w-full border p-2 mb-3 rounded"
+            />
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={(e) => setQuotationData((prev) => ({ ...prev, file: e.target.files?.[0] || null }))}
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <button onClick={() => setShowUploadQuotation(false)}>Cancel</button>
+              <button onClick={handleUploadQuotation} className="bg-[#3c405b] text-white px-4 py-2 rounded">
                 Upload
               </button>
             </div>
@@ -324,31 +333,17 @@ const PaymentTab: React.FC<PaymentTabProps> = ({ project }) => {
       {showUploadReceipt && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-[#3c405b] mb-4">Upload Payment Receipt</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#2E3453] mb-1">
-                  Receipt File
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">Upload PDF or Image file</p>
-                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 mt-6">
+            <h3 className="text-lg font-semibold text-[#3c405b] mb-4">Upload Receipt</h3>
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <button onClick={() => setShowUploadReceipt(null)}>Cancel</button>
               <button
-                onClick={() => setShowUploadReceipt(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleUploadReceipt('payment-1')}
-                className="px-4 py-2 bg-[#3c405b] text-white rounded-lg hover:bg-[#2E3453] transition-colors"
+                onClick={() => handleUploadReceipt(showUploadReceipt)}
+                className="bg-[#3c405b] text-white px-4 py-2 rounded"
               >
                 Upload
               </button>
