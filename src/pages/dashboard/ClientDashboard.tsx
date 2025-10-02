@@ -49,6 +49,16 @@ const ClientDashboard: React.FC = () => {
               <h1 className="text-3xl font-bold text-[#3c405b]">Welcome back, {user?.name}</h1>
               <p className="text-gray-600 mt-1">Track your projects and collaborate with designers</p>
             </div>
+            {/* Right side buttons */}
+            <div className="flex items-center space-x-4">
+              {/* Create New Project Button */}
+              <button
+                onClick={() => navigate('/create-project')}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Create New Project
+              </button>
+            </div>
           </div>
         </div>
       </div>

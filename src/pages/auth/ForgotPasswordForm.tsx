@@ -38,15 +38,26 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onToggleForm })
     }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (otp === '123456') { // Demo OTP
-      setStep('reset');
-      setSuccess('OTP verified successfully');
-    } else {
-      setError('Invalid OTP');
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setStep("reset");
+        setSuccess("OTP verified successfully");
+      } else {
+        setError(data.message || "Invalid OTP");
+      }
+    } catch (err) {
+      setError("Failed to verify OTP");
     }
   };
 

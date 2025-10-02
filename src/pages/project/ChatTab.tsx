@@ -17,12 +17,12 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Corrected user object to match localStorage keys
-  const user = {
-    id: localStorage.getItem("id") || "temp-id",
-    name: localStorage.getItem("name") || "User",
-    role: localStorage.getItem("role") || "client",
-  };
+  const storedUser = localStorage.getItem("user");
+
+  const user = storedUser
+    ? JSON.parse(storedUser)
+    : { id: "temp-id", name: "User", role: "client" };
+
 
   const fetchMessages = async () => {
     try {
@@ -115,7 +115,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
             {messages.length} messages • Last activity: {lastMessageTime ? formatTime(lastMessageTime) : "No messages"}
           </p>
         </div>
-        <button onClick={fetchMessages} className="p-2 text-gray-500 hover:text-gray-700">
+        <button onClick={fetchMessages} className="p-2 text-gray-500 bg-gray-200 hover:bg-gray-500 hover:text-gray-100 rounded-md">
           <RefreshCw className="h-5 w-5" />
         </button>
       </div>
@@ -154,9 +154,8 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
                     )}
 
                     <div
-                      className={`px-4 py-2 rounded-2xl ${
-                        isOwnMessage ? "bg-[#3c405b] text-white rounded-br-md" : "bg-white text-[#2E3453] border border-gray-200 rounded-bl-md"
-                      }`}
+                      className={`px-4 py-2 rounded-2xl ${isOwnMessage ? "bg-[#3c405b] text-white rounded-br-md" : "bg-white text-[#2E3453] border border-gray-200 rounded-bl-md"
+                        }`}
                     >
                       {message.type === "text" && <p className="text-sm leading-relaxed">{message.content}</p>}
                       {message.type === "image" && <img src={message.attachmentUrl} alt="Shared" className="rounded-lg max-w-full h-48 object-cover mt-2" />}

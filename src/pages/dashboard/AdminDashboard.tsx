@@ -55,10 +55,21 @@ const AdminDashboard: React.FC = () => {
               <h1 className="text-3xl font-bold text-[#3c405b]">Welcome back, {user?.name}</h1>
               <p className="text-gray-600 mt-1">Manage all clients' design projects</p>
             </div>
+
+            {/* Right side buttons */}
             <div className="flex items-center space-x-4">
+              {/* Active Projects Info */}
               <div className="bg-blue-50 px-4 py-2 rounded-lg">
                 <span className="text-blue-600 font-medium">{ongoingProjects.length} Active Projects</span>
               </div>
+
+              {/* Create New Project Button */}
+              <button
+                onClick={() => navigate('/')}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Create New Project
+              </button>
             </div>
           </div>
         </div>

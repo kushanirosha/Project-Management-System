@@ -94,24 +94,37 @@ const register = async (name: string, email: string, password: string, role: 'ad
     });
   };
 
-  const forgotPassword = async (email: string): Promise<boolean> => {
-    // Simulate sending OTP
-    const user = dummyUsers.find(u => u.email === email);
-    if (user) {
-      console.log(`OTP sent to ${email}: 123456`); // Demo OTP
-      return true;
-    }
-    return false;
-  };
 
-  const resetPassword = async (email: string, otp: string, newPassword: string): Promise<boolean> => {
-    // Simulate password reset
-    if (otp === '123456') { // Demo OTP
-      console.log(`Password reset successful for ${email}`);
-      return true;
-    }
+
+const forgotPassword = async (email: string): Promise<boolean> => {
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    return data.success; // <-- return true/false
+  } catch (err) {
     return false;
-  };
+  }
+};
+
+
+const resetPassword = async (email: string, otp: string, newPassword: string) => {
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp, newPassword }),
+    });
+    const data = await res.json();
+    return data.success;
+  } catch (err) {
+    return false;
+  }
+};
+
 
   const contextValue: AuthContextType = {
     ...authState,

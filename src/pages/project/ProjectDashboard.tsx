@@ -16,10 +16,10 @@ const ProjectDashboard: React.FC = () => {
 
   if (!project) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-100">
         <p className="text-gray-600 mb-4">Project not found.</p>
         <button
-          onClick={() => navigate(-1)} 
+          onClick={() => navigate(-1)}
           className="px-4 py-2 bg-[#3c405b] text-white rounded-lg hover:bg-[#2c2f45]"
         >
           Back to Dashboard
@@ -42,7 +42,8 @@ const ProjectDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="h-screen bg-gray-100 flex">
+      {/* Sidebar */}
       <ProjectSidebar
         project={project}
         activeTab={activeTab}
@@ -50,7 +51,9 @@ const ProjectDashboard: React.FC = () => {
         onBack={() => navigate("/admin-dashboard")}
       />
 
-      <div className="flex-1 flex flex-col">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col h-screen">
+        {/* Header */}
         <div className="bg-white border-b border-gray-200 px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -66,7 +69,10 @@ const ProjectDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex-1 p-8">{renderTabContent()}</div>
+        {/* Tab content with full height */}
+        <div className="flex-1 p-8 overflow-y-auto h-full">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );
