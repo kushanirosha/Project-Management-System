@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from "react";
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Phone, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 
 interface RegisterFormProps {
   onToggleForm: (form: "login" | "register" | "forgot") => void;
@@ -11,6 +11,7 @@ interface RegisterFormProps {
 const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleForm }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role] = useState("client");
@@ -39,7 +40,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleForm }) => {
     setLoading(true);
 
     try {
-      const success = await register(name, email, password, role);
+      const success = await register(name, email, password, role, phone);
       if (!success) {
         setError("Registration failed. Email might already exist.");
       } else {
@@ -98,6 +99,30 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleForm }) => {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="Enter your email"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Phone */}
+        <div>
+          <label className="block text-sm font-medium text-[#2E3453] mb-1">
+            Contact Number
+          </label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => {
+                // Allow only digits and optional leading '+'
+                const val = e.target.value;
+                if (/^\+?\d*$/.test(val)) {
+                  setPhone(val);
+                }
+              }}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              placeholder="Enter your phone number"
               required
             />
           </div>

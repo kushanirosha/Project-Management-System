@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, Calendar, Tag, ArrowLeft } from 'lucide-react';
+import { User, Mail, Calendar, Tag, ArrowLeft, Phone } from 'lucide-react';
 import { Project } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -32,7 +32,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
     return status === 'ongoing' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
   };
 
-  // ✅ Handle back based on role
+  // Handle back navigation based on role
   const handleBack = () => {
     const storedUser = localStorage.getItem("user");
     const user = storedUser ? JSON.parse(storedUser) : null;
@@ -97,6 +97,10 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
           <div className="flex items-center text-sm text-gray-600">
             <Mail className="h-4 w-4 mr-3" />
             <span>{project.client.email}</span>
+          </div>
+          <div className="flex items-center text-sm text-gray-600">
+            <Phone className="h-4 w-4 mr-3" />
+            <span>{project.client.phone || "N/A"}</span> 
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <Calendar className="h-4 w-4 mr-3" />

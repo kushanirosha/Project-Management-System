@@ -1,16 +1,88 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, User, Folder, Clock } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+const API_URL = "http://localhost:5000/api";
+const STAGES = ["to do", "in progress", "review", "done"];
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { projects, setSelectedProject } = useProject();
   const { user } = useAuth();
 
-  const ongoingProjects = projects.filter(p => p.status === 'ongoing');
-  const finishedProjects = projects.filter(p => p.status === 'finished');
+  const [users, setUsers] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/clients`);
+        setUsers(res.data);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+      }
+    };
+
+    const fetchTasks = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/kanban`);
+        setTasks(res.data);
+      } catch (err) {
+        console.error("Error fetching tasks:", err);
+      }
+    };
+
+    fetchUsers();
+    fetchTasks();
+  }, []);
+
+  // Get all tasks for a project
+  const getProjectTasks = (projectId: string) => {
+    return tasks.filter((t) => t.projectId === projectId);
+  };
+
+  // Determine project stage from tasks
+  const getProjectStage = (projectId: string) => {
+    const projectTasks = getProjectTasks(projectId);
+    if (!projectTasks.length) return "to do";
+
+    if (projectTasks.some((t) => t.stage === "done")) return "done";
+    if (projectTasks.some((t) => t.stage === "review")) return "review";
+    if (projectTasks.some((t) => t.stage === "in progress")) return "in progress";
+    return "to do";
+  };
+
+  // Progress bar (out of 4)
+  const getProgressOutOf4 = (projectId: string) => {
+    const stage = getProjectStage(projectId);
+    const stageIndex = STAGES.indexOf(stage);
+    return { current: stageIndex + 1, total: 4, percent: ((stageIndex + 1) / 4) * 100 };
+  };
+
+  // Get project completion date (latest done task)
+  const getProjectCompletionDate = (projectId: string) => {
+    const doneTasks = getProjectTasks(projectId).filter((t) => t.stage === "done");
+    if (!doneTasks.length) return null;
+
+    const latestDoneTask = doneTasks.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+
+    return latestDoneTask.createdAt;
+  };
+
+  // Separate ongoing & finished projects
+  const ongoingProjects = projects.filter((p) => getProjectStage(p.id) !== "done");
+  const finishedProjects = projects
+    .filter((p) => getProjectStage(p.id) === "done")
+    .sort((a, b) => {
+      const aDate = getProjectCompletionDate(a.id) ? new Date(getProjectCompletionDate(a.id)!).getTime() : 0;
+      const bDate = getProjectCompletionDate(b.id) ? new Date(getProjectCompletionDate(b.id)!).getTime() : 0;
+      return bDate - aDate; // Most recent first
+    });
 
   const formatDeadline = (deadline: string) => {
     const date = new Date(deadline);
@@ -18,14 +90,14 @@ const AdminDashboard: React.FC = () => {
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return 'Overdue';
-    if (diffDays === 0) return 'Due today';
-    if (diffDays === 1) return 'Due tomorrow';
+    if (diffDays < 0) return "Overdue";
+    if (diffDays === 0) return "Due today";
+    if (diffDays === 1) return "Due tomorrow";
     return `${diffDays} days left`;
   };
 
-  const getCategoryColor = (category: 'web' | 'graphic') => {
-    return category === 'web' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+  const getCategoryColor = (category: "web" | "graphic") => {
+    return category === "web" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800";
   };
 
   const getDeadlineColor = (deadline: string) => {
@@ -34,21 +106,15 @@ const AdminDashboard: React.FC = () => {
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return 'text-red-600';
-    if (diffDays <= 3) return 'text-orange-600';
-    return 'text-green-600';
-  };
-
-  const getProgressPercent = (project: any) => {
-    return project.tasks.length
-      ? (project.tasks.filter((t: any) => t.status === 'finished').length / project.tasks.length) * 100
-      : 0;
+    if (diffDays < 0) return "text-red-600";
+    if (diffDays <= 3) return "text-orange-600";
+    return "text-green-600";
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b fixed w-full mt-[65px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div>
@@ -77,7 +143,8 @@ const AdminDashboard: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-8 mt-48">
+          {/* Total Projects */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -90,6 +157,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Ongoing */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
@@ -102,6 +170,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Clients */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -110,12 +179,13 @@ const AdminDashboard: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Clients</p>
                 <p className="text-2xl font-bold text-[#3c405b]">
-                  {new Set(projects.map(p => p.clientId)).size}
+                  {users.length}
                 </p>
               </div>
             </div>
           </div>
 
+          {/* Completed */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
@@ -140,52 +210,60 @@ const AdminDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {ongoingProjects.map((project) => (
-                <div
-                  key={project.id}
-                  onClick={() => {
-                    setSelectedProject(project);
-                    navigate(`/project-dashboard/${project.id}`);
-                  }}
-                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer p-6"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="font-semibold text-[#3c405b] text-lg">{project.name}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(project.category)}`}>
-                      {project.category}
-                    </span>
-                  </div>
+              {ongoingProjects.map((project) => {
+                const { current, total, percent } = getProgressOutOf4(project.id);
+                const stage = getProjectStage(project.id);
 
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <User className="h-4 w-4 mr-2" />
-                      <span>{project.client.name}</span>
-                    </div>
-
-                    <div className="flex items-center text-sm">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      <span className={getDeadlineColor(project.deadline)}>
-                        {formatDeadline(project.deadline)}
+                return (
+                  <div
+                    key={project.id}
+                    onClick={() => {
+                      setSelectedProject(project);
+                      navigate(`/project-dashboard/${project.id}`);
+                    }}
+                    className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer p-6"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="font-semibold text-[#3c405b] text-lg">{project.name}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(project.category)}`}>
+                        {project.category}
                       </span>
                     </div>
 
-                    <div className="pt-2">
-                      <div className="flex justify-between text-sm text-gray-600 mb-1">
-                        <span>Progress</span>
-                        <span>
-                          {project.tasks.filter((t: any) => t.status === 'finished').length}/{project.tasks.length} tasks
+                    <div className="space-y-3">
+                      {/* Client */}
+                      <div className="flex items-center text-sm text-gray-600">
+                        <div className="h-8 w-8 rounded-full bg-gray-500 flex items-center justify-center text-white font-medium mr-2">
+                          {project.client?.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <span>{project.client?.name}</span>
+                      </div>
+
+                      {/* Deadline */}
+                      <div className="flex items-center text-sm">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        <span className={getDeadlineColor(project.deadline)}>
+                          {formatDeadline(project.deadline)}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${getProgressPercent(project)}%` }}
-                        />
+
+                      {/* Stage + Progress */}
+                      <div className="pt-2">
+                        <div className="flex justify-between text-sm text-gray-600 mb-1">
+                          <span>Stage: {stage}</span>
+                          <span>{current}/{total}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -232,7 +310,9 @@ const AdminDashboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(project.deadline).toLocaleDateString()}
+                        {getProjectCompletionDate(project.id)
+                          ? new Date(getProjectCompletionDate(project.id)!).toLocaleDateString()
+                          : "N/A"}
                       </td>
                     </tr>
                   ))}

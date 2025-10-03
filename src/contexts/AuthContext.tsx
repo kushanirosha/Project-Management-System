@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthState } from '../types';
-import { dummyUsers } from '../data/dummyData';
+
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>;
@@ -46,44 +46,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-  try {
-    const res = await fetch("http://localhost:5000/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
+    try {
+      const res = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
 
-    if (!res.ok) return false;
-    const user = await res.json();
+      if (!res.ok) return false;
+      const user = await res.json();
 
-    localStorage.setItem("user", JSON.stringify(user));
-    setAuthState({ user, isAuthenticated: true, loading: false });
-    return true;
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
-};
+      localStorage.setItem("user", JSON.stringify(user));
+      setAuthState({ user, isAuthenticated: true, loading: false });
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
 
-const register = async (name: string, email: string, password: string, role: 'admin' | 'client'): Promise<boolean> => {
-  try {
-    const res = await fetch("http://localhost:5000/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role })
-    });
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    role: 'admin' | 'client',
+    phone: string // ✅ add this
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role, phone }), // ✅ include phone
+      });
 
-    if (!res.ok) return false;
-    const user = await res.json(); // includes 'id'
+      if (!res.ok) return false;
+      const user = await res.json(); // includes id, phone etc.
 
-    localStorage.setItem("user", JSON.stringify(user));
-    setAuthState({ user, isAuthenticated: true, loading: false });
-    return true;
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
-};
+      localStorage.setItem("user", JSON.stringify(user));
+      setAuthState({ user, isAuthenticated: true, loading: false });
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
 
   const logout = () => {
     localStorage.removeItem('user');
@@ -96,34 +102,34 @@ const register = async (name: string, email: string, password: string, role: 'ad
 
 
 
-const forgotPassword = async (email: string): Promise<boolean> => {
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const data = await res.json();
-    return data.success; // <-- return true/false
-  } catch (err) {
-    return false;
-  }
-};
+  const forgotPassword = async (email: string): Promise<boolean> => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      return data.success; // <-- return true/false
+    } catch (err) {
+      return false;
+    }
+  };
 
 
-const resetPassword = async (email: string, otp: string, newPassword: string) => {
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/reset-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp, newPassword }),
-    });
-    const data = await res.json();
-    return data.success;
-  } catch (err) {
-    return false;
-  }
-};
+  const resetPassword = async (email: string, otp: string, newPassword: string) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp, newPassword }),
+      });
+      const data = await res.json();
+      return data.success;
+    } catch (err) {
+      return false;
+    }
+  };
 
 
   const contextValue: AuthContextType = {
