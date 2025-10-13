@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProjectProvider } from "./contexts/ProjectContext";
 
 import AuthScreen from "./pages/auth/AuthScreen";
-import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import AdminDashboard from "./pages/dashboard/AdminDashboard/index";
 import ClientDashboard from "./pages/dashboard/ClientDashboard";
 import ProjectDashboard from "./pages/project/ProjectDashboard";
 import CreateProject from "./pages/project/Createproject";

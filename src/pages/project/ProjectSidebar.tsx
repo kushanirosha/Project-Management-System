@@ -9,9 +9,9 @@ interface ProjectSidebarProps {
   onTabChange: (tab: 'project' | 'payment' | 'chat') => void;
 }
 
-const ProjectSidebar: React.FC<ProjectSidebarProps> = ({ 
-  project, 
-  activeTab, 
+const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
+  project,
+  activeTab,
   onTabChange
 }) => {
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
   };
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-screen">
+    <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <button
@@ -57,7 +57,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
           <ArrowLeft className="h-5 w-5 mr-2" />
           <span>Back to Dashboard</span>
         </button>
-        
+
         <h2 className="text-xl font-bold text-[#3c405b] mb-2">{project.name}</h2>
         <div className="flex flex-wrap gap-2">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(project.category)}`}>
@@ -74,9 +74,9 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
         <h3 className="text-sm font-semibold text-[#2E3453] mb-4 uppercase tracking-wide">
           Client Details
         </h3>
-        
+
         <div className="flex items-center mb-4">
-          <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mr-3 text-white font-bold text-lg">
             {project.client.avatar ? (
               <img
                 src={project.client.avatar}
@@ -84,7 +84,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
                 className="w-12 h-12 rounded-full object-cover"
               />
             ) : (
-              <User className="h-6 w-6 text-gray-400" />
+              <span>{project.client.name?.charAt(0).toUpperCase()}</span>
             )}
           </div>
           <div>
@@ -100,7 +100,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <Phone className="h-4 w-4 mr-3" />
-            <span>{project.client.phone || "N/A"}</span> 
+            <span>{project.client.phone || "N/A"}</span>
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <Calendar className="h-4 w-4 mr-3" />
@@ -124,11 +124,10 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id as 'project' | 'payment' | 'chat')}
-              className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
-                activeTab === tab.id
+              className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${activeTab === tab.id
                   ? 'bg-[#3c405b] text-white'
                   : 'text-gray-600 hover:bg-gray-100'
-              }`}
+                }`}
             >
               <tab.icon className="h-5 w-5 mr-3" />
               <span className="font-medium">{tab.label}</span>

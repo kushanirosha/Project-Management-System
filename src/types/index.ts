@@ -21,18 +21,6 @@ export interface Project {
   messages: Message[];
 }
 
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'in-progress' | 'review' | 'finished';
-  assignedTo?: string;
-  createdBy: string;
-  createdAt: string;
-  attachments?: string[];
-  comments?: TaskComment[];
-}
-
 export interface TaskComment {
   id: string;
   content: string;
@@ -68,4 +56,28 @@ export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
+}
+
+export interface TaskComment {
+  id: string;
+  content: string;
+  author: string;
+  createdAt: string;
+  type: "comment" | "approval" | "change_request";
+}
+
+export interface Task {
+  _id?: string;
+  projectId: string;
+  title: string;
+  description: string;
+  stage: "to do" | "in progress" | "review" | "done";
+  createdBy: string;
+  createdAt: string;
+  comments: TaskComment[];
+  attachments?: string[];
+}
+
+export interface KanbanBoardProps {
+  projectId: string;
 }

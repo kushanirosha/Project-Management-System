@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ProjectSidebar from "./ProjectSidebar";
-import KanbanBoard from "./KanbanBoard";
+import { KanbanBoard } from "../kanbanBoard";
 import PaymentTab from "./PaymentTab";
 import ChatTab from "./ChatTab";
 import { useProject } from "../../contexts/ProjectContext";
@@ -42,7 +42,7 @@ const ProjectDashboard: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-100 flex">
+    <div className="bg-gray-100 flex">
       {/* Sidebar */}
       <ProjectSidebar
         project={project}
@@ -52,9 +52,9 @@ const ProjectDashboard: React.FC = () => {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col h-screen">
+      <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-8 py-6">
+        <div className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-[#3c405b] capitalize">
