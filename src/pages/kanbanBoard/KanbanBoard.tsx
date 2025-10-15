@@ -7,6 +7,7 @@ import { Task } from "../../types/index";
 import AddTaskModal from "./AddTaskModal";
 import TaskDetailModal from "./TaskDetailModal";
 import TaskCard from "../../components/TaskCard";
+import toast, { Toaster } from "react-hot-toast";
 
 const KanbanBoard: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -33,17 +34,15 @@ const KanbanBoard: React.FC = () => {
       if (!projectId) return;
 
       try {
-        // Fetch tasks
-        const tasksRes = await fetch(`http://localhost:5000/api/projects/${projectId}/tasks`);
+        const tasksRes = await fetch(`http://localhost:5000/api/kanban/${projectId}/tasks`);
         if (!tasksRes.ok) throw new Error("Failed to fetch tasks");
         const tasksData = await tasksRes.json();
         setTasks(tasksData);
 
-        // Fetch project status
         const projectRes = await fetch(`http://localhost:5000/api/projects/${projectId}`);
         if (!projectRes.ok) throw new Error("Failed to fetch project");
         const projectData = await projectRes.json();
-        setProjectStatus(projectData.status); // expects "ongoing" or "finished"
+        setProjectStatus(projectData.status);
       } catch (err) {
         console.error("❌ Error fetching data:", err);
       }
@@ -56,7 +55,7 @@ const KanbanBoard: React.FC = () => {
 
   // Drag-and-drop logic
   const onDragEnd = async (result: DropResult) => {
-    if (!result.destination) return;
+    if (!result.destination || projectStatus === "finished") return;
 
     const taskId = result.draggableId;
     const newStage = result.destination.droppableId as Task["stage"];
@@ -88,17 +87,30 @@ const KanbanBoard: React.FC = () => {
 
       if (res.ok) {
         setProjectStatus("finished");
-        alert("✅ Project marked as finished!");
+
+        // ✅ Show toast notification
+        toast.success("Project marked as finished!", {
+          position: "top-right",
+          duration: 4000,
+          style: { background: "#22c55e", color: "#fff" },
+        });
       } else {
-        console.error("❌ Failed to update project status");
+        toast.error("Failed to update project status", {
+          position: "top-right",
+          duration: 4000,
+        });
       }
     } catch (err) {
       console.error("❌ Error updating project:", err);
+      toast.error("Error updating project", { position: "top-right", duration: 4000 });
     }
   };
 
   return (
     <div className="h-full flex flex-col">
+      {/* Toast container */}
+      <Toaster />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6 gap-2">
         <h3 className="text-lg font-semibold text-[#3c405b]">Project Tasks</h3>
@@ -158,7 +170,9 @@ const KanbanBoard: React.FC = () => {
                           <TaskCard
                             task={task}
                             provided={provided}
+                            // ✅ Restrict opening modal to view only
                             onSelect={() => setSelectedTask(task)}
+                            disableActions={projectStatus === "finished"} // you need to handle inside TaskCard
                           />
                         )}
                       </Draggable>
@@ -191,6 +205,7 @@ const KanbanBoard: React.FC = () => {
           authorName={authorName}
           newComment={newComment}
           setNewComment={setNewComment}
+          disableActions={projectStatus === "finished"} // disable comment input & action buttons
         />
       )}
     </div>

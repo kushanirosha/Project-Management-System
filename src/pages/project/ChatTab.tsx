@@ -1,29 +1,39 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Send, Paperclip, Image, Smile, Reply, RefreshCw } from "lucide-react";
+import {
+  Send,
+  Paperclip,
+  Image,
+  Smile,
+  Reply,
+  RefreshCw,
+  X,
+  Download,
+} from "lucide-react";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
 import { Message } from "../../types";
 
 interface ChatTabProps {
   projectId: string;
 }
 
-const API_URL = "http://localhost:5000/api/projects";
+const API_URL = "http://localhost:5000/api/chat";
 
 const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const storedUser = localStorage.getItem("user");
-
   const user = storedUser
     ? JSON.parse(storedUser)
     : { id: "temp-id", name: "User", role: "client" };
 
-
+  // Fetch messages
   const fetchMessages = async () => {
     try {
       const res = await axios.get(`${API_URL}/${projectId}/messages`);
@@ -37,10 +47,12 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
     fetchMessages();
   }, []);
 
+  // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Handle sending message
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !file) return;
 
@@ -49,8 +61,8 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
     formData.append("senderId", user.id);
     formData.append("senderName", user.name);
     formData.append("senderRole", user.role);
+    formData.append("type", file ? getFileType(file) : "text");
 
-    if (!file) formData.append("type", "text");
     if (replyTo) formData.append("replyTo", replyTo);
     if (file) formData.append("file", file);
 
@@ -68,6 +80,11 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
     }
   };
 
+  const getFileType = (file: File): "image" | "document" => {
+    if (file.type.startsWith("image/")) return "image";
+    return "document";
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -77,7 +94,11 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   const formatDate = (timestamp: string) => {
@@ -88,7 +109,11 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
 
     if (date.toDateString() === today.toDateString()) return "Today";
     if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   const groupMessagesByDate = (messages: Message[]) => {
@@ -103,7 +128,18 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
 
   const groupedMessages = groupMessagesByDate(messages);
   const replyToMessage = messages.find((m) => m._id === replyTo);
-  const lastMessageTime = messages.length ? messages[messages.length - 1].createdAt : null;
+  const lastMessageTime = messages.length
+    ? messages[messages.length - 1].createdAt
+    : null;
+
+  // Close image zoom with ESC
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPreviewImage(null);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
@@ -112,10 +148,14 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
         <div>
           <h3 className="text-lg font-semibold text-[#3c405b]">Project Chat</h3>
           <p className="text-sm text-gray-600">
-            {messages.length} messages • Last activity: {lastMessageTime ? formatTime(lastMessageTime) : "No messages"}
+            {messages.length} messages • Last activity:{" "}
+            {lastMessageTime ? formatTime(lastMessageTime) : "No messages"}
           </p>
         </div>
-        <button onClick={fetchMessages} className="p-2 text-gray-500 bg-gray-200 hover:bg-gray-500 hover:text-gray-100 rounded-md">
+        <button
+          onClick={fetchMessages}
+          className="p-2 text-gray-500 bg-gray-200 hover:bg-gray-500 hover:text-gray-100 rounded-md"
+        >
           <RefreshCw className="h-5 w-5" />
         </button>
       </div>
@@ -125,45 +165,108 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
         {Object.entries(groupedMessages).map(([date, dateMessages]) => (
           <div key={date}>
             <div className="flex items-center justify-center my-6">
-              <div className="bg-white px-3 py-1 rounded-full text-xs text-gray-500 border">{date}</div>
+              <div className="bg-white px-3 py-1 rounded-full text-xs text-gray-500 border">
+                {date}
+              </div>
             </div>
 
             {dateMessages.map((message) => {
               const isOwnMessage = message.senderId === user.id;
-
               return (
-                <div key={message._id} className={`flex mb-4 ${isOwnMessage ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-xs lg:max-w-md ${isOwnMessage ? "order-2" : "order-1"}`}>
+                <div
+                  key={message._id}
+                  className={`flex mb-4 ${
+                    isOwnMessage ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md ${
+                      isOwnMessage ? "order-2" : "order-1"
+                    }`}
+                  >
                     {!isOwnMessage && (
                       <div className="flex items-center mb-1">
-                        <div className="w-6 h-6 rounded-full bg-gray-300 mr-2">
-                          {message.senderRole && <span className="text-xs">{message.senderName[0]}</span>}
+                        <div className="w-6 h-6 rounded-full bg-gray-300 mr-2 flex items-center justify-center text-xs font-medium">
+                          {message.senderName[0]}
                         </div>
-                        <span className="text-xs text-gray-600 font-medium">{message.senderName}</span>
+                        <span className="text-xs text-gray-600 font-medium">
+                          {message.senderName}
+                        </span>
                       </div>
                     )}
 
+                    {/* Reply preview */}
                     {message.replyTo && (
                       <div className="mb-2 px-3 py-2 bg-gray-200 rounded-lg text-xs text-gray-600 border-l-4 border-blue-400">
                         <div className="flex items-center mb-1">
                           <Reply className="h-3 w-3 mr-1" />
                           <span>Replying to message</span>
                         </div>
-                        <p className="truncate">{messages.find(m => m._id === message.replyTo)?.content}</p>
+                        <p className="truncate">
+                          {messages.find((m) => m._id === message.replyTo)
+                            ?.content || "Message deleted"}
+                        </p>
                       </div>
                     )}
 
+                    {/* Message Content */}
                     <div
-                      className={`px-4 py-2 rounded-2xl ${isOwnMessage ? "bg-[#3c405b] text-white rounded-br-md" : "bg-white text-[#2E3453] border border-gray-200 rounded-bl-md"
-                        }`}
+                      className={`px-4 py-2 rounded-2xl ${
+                        isOwnMessage
+                          ? "bg-[#3c405b] text-white rounded-br-md"
+                          : "bg-white text-[#2E3453] border border-gray-200 rounded-bl-md"
+                      }`}
                     >
-                      {message.type === "text" && <p className="text-sm leading-relaxed">{message.content}</p>}
-                      {message.type === "image" && <img src={message.attachmentUrl} alt="Shared" className="rounded-lg max-w-full h-48 object-cover mt-2" />}
+                      {message.type === "text" && (
+                        <ReactMarkdown
+                          components={{
+                            p: ({ node, ...props }) => (
+                              <p className="text-sm leading-relaxed" {...props} />
+                            ),
+                            a: ({ node, ...props }) => (
+                              <a
+                                {...props}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              />
+                            ),
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      )}
+
+                      {message.type === "image" && (
+                        <div className="relative group mt-2">
+                          <img
+                            src={message.attachmentUrl}
+                            alt="Shared"
+                            className="rounded-lg max-w-full h-48 object-cover cursor-pointer hover:opacity-90 transition"
+                            onClick={() => setPreviewImage(message.attachmentUrl)}
+                          />
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                            <a
+                              href={message.attachmentUrl}
+                              download
+                              className="bg-black/50 p-1 rounded-full text-white hover:bg-black"
+                            >
+                              <Download className="h-4 w-4" />
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
                       {message.type === "document" && (
-                        <div className="flex items-center">
-                          <Paperclip className="h-4 w-4 mr-2" />
-                          <a href={message.attachmentUrl} target="_blank" className="text-blue-600 text-sm">
-                            Download File
+                        <div className="flex items-center mt-2 text-sm">
+                          <Paperclip className="h-4 w-4 mr-2 text-gray-400" />
+                          <a
+                            href={message.attachmentUrl}
+                            download
+                            target="_blank"
+                            className="text-blue-600 hover:underline"
+                          >
+                            Download Document
                           </a>
                         </div>
                       )}
@@ -171,7 +274,10 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
 
                     <div className="flex items-center mt-1 space-x-2 text-xs text-gray-500">
                       <span>{formatTime(message.createdAt)}</span>
-                      <button onClick={() => setReplyTo(message._id)} className="hover:text-blue-600 transition-colors">
+                      <button
+                        onClick={() => setReplyTo(message._id)}
+                        className="hover:text-blue-600 transition-colors"
+                      >
                         Reply
                       </button>
                     </div>
@@ -184,6 +290,25 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Image Zoom Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="relative">
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-lg"
+            />
+            <button
+              className="absolute top-3 right-3 bg-black/50 text-white p-2 rounded-full hover:bg-black"
+              onClick={() => setPreviewImage(null)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Reply Preview */}
       {replyToMessage && (
         <div className="bg-blue-50 px-4 py-2 border-t border-blue-200">
@@ -192,11 +317,16 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
               <Reply className="h-4 w-4 mr-1" />
               <span>Replying to {replyToMessage.senderName}</span>
             </div>
-            <button onClick={() => setReplyTo(null)} className="text-blue-600 hover:text-blue-800">
+            <button
+              onClick={() => setReplyTo(null)}
+              className="text-blue-600 hover:text-blue-800"
+            >
               ×
             </button>
           </div>
-          <p className="text-xs text-gray-600 mt-1 truncate">{replyToMessage.content}</p>
+          <p className="text-xs text-gray-600 mt-1 truncate">
+            {replyToMessage.content}
+          </p>
         </div>
       )}
 
@@ -209,7 +339,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder="Type your message... (supports markdown links)"
                 className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-colors"
                 rows={1}
                 style={{ minHeight: "44px", maxHeight: "120px" }}
@@ -218,7 +348,14 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
                 <label className="p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
                   <Image className="h-5 w-5" />
-                  <input type="file" className="hidden" onChange={(e) => e.target.files && setFile(e.target.files[0])} />
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) =>
+                      e.target.files && setFile(e.target.files[0])
+                    }
+                    accept="image/*,application/pdf,.doc,.docx,.txt"
+                  />
                 </label>
                 <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                   <Smile className="h-5 w-5" />
@@ -235,6 +372,20 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
             <Send className="h-5 w-5" />
           </button>
         </div>
+
+        {/* File Preview */}
+        {file && (
+          <div className="mt-2 flex items-center text-sm text-gray-600 bg-gray-100 p-2 rounded-lg">
+            <Paperclip className="h-4 w-4 mr-2" />
+            <span className="truncate">{file.name}</span>
+            <button
+              className="ml-auto text-gray-500 hover:text-red-500"
+              onClick={() => setFile(null)}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

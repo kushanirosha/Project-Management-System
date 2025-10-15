@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, Calendar, Tag, ArrowLeft, Phone } from 'lucide-react';
+import { User, Mail, Calendar, Tag, ArrowLeft, Phone, Clock } from 'lucide-react';
 import { Project } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,6 +31,56 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
   const getStatusColor = (status: 'ongoing' | 'finished') => {
     return status === 'ongoing' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
   };
+
+  // Calculate project timeline info
+  const getProjectTimelineStatus = () => {
+    const deadline = new Date(project.deadline);
+    const updatedAt = new Date(project.updatedAt);
+    const now = new Date();
+
+    if (project.status === 'ongoing') {
+      const diffTime = deadline.getTime() - now.getTime();
+      const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (remainingDays > 0) {
+        return {
+          text: `${remainingDays} day${remainingDays > 1 ? 's' : ''} remaining until deadline`,
+          color: 'text-green-600',
+        };
+      } else {
+        return {
+          text: `Deadline passed ${Math.abs(remainingDays)} day${Math.abs(remainingDays) > 1 ? 's' : ''} ago`,
+          color: 'text-red-600',
+        };
+      }
+    }
+
+    if (project.status === 'finished') {
+      const diffTime = updatedAt.getTime() - deadline.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        return {
+          text: `Completed the project ${Math.abs(diffDays)} day${Math.abs(diffDays) > 1 ? 's' : ''} before deadline`,
+          color: 'text-green-600',
+        };
+      } else if (diffDays === 0) {
+        return {
+          text: `Completed the project on the deadline date`,
+          color: 'text-blue-600',
+        };
+      } else {
+        return {
+          text: `Completed project ${diffDays} day${diffDays > 1 ? 's' : ''} after deadline`,
+          color: 'text-orange-600',
+        };
+      }
+    }
+
+    return null;
+  };
+
+  const projectTimelineStatus = getProjectTimelineStatus();
 
   // Handle back navigation based on role
   const handleBack = () => {
@@ -110,6 +160,16 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
             <Tag className="h-4 w-4 mr-3" />
             <span>Started: {formatDate(project.createdAt)}</span>
           </div>
+
+          {/* Project Status Summary */}
+          {projectTimelineStatus && (
+            <div className="flex items-center text-sm mt-2">
+              <Clock className="h-4 w-4 mr-3 text-gray-500" />
+              <span className={`${projectTimelineStatus.color} font-medium`}>
+                {projectTimelineStatus.text}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

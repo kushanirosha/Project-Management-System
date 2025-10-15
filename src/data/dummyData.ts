@@ -178,6 +178,6 @@ export const bankDetails = {
   bankName: 'Design Studio Bank',
   accountName: 'Sarah Johnson Design Studio',
   accountNumber: '1234567890',
-  routingNumber: '123456789',
-  swiftCode: 'DSBS1234'
+  routingNumber: 'Colombo',
+  country: "Sri Lanka",
 };

@@ -43,7 +43,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/projects/${projectId}/tasks`,
+        `http://localhost:5000/api/kanban/${projectId}/tasks`,
         {
           method: "POST",
           body: formData,
