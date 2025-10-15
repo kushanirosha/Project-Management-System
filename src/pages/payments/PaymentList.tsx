@@ -1,6 +1,6 @@
 import React from "react";
 import { Upload, Download } from "lucide-react";
-import { Payment } from "../types/index";
+import { Payment } from "../../types/index";
 import { getStatusColor, getStatusIcon } from "./helpers";
 
 interface Props {

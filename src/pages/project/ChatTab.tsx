@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Send,
   Paperclip,
-  Image,
   Smile,
   Reply,
   RefreshCw,
@@ -25,6 +24,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -74,6 +74,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
       setNewMessage("");
       setFile(null);
       setReplyTo(null);
+      setShowEmojiPicker(false);
       fetchMessages();
     } catch (err) {
       console.error("❌ Failed to send message:", err);
@@ -141,8 +142,32 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
+  // Add emoji (only 👍 and ❤️)
+  const handleEmojiSelect = (emoji: string) => {
+    setNewMessage((prev) => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  // File downloader
+  const handleFileDownload = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const objectUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = url.split("/").pop() || "download";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error("❌ Failed to download file:", error);
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white p-4 border-b border-gray-200 flex justify-between items-center">
         <div>
@@ -187,7 +212,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
                     {!isOwnMessage && (
                       <div className="flex items-center mb-1">
                         <div className="w-6 h-6 rounded-full bg-gray-300 mr-2 flex items-center justify-center text-xs font-medium">
-                          {message.senderName[0]}
+                          {message.senderName.charAt(0).toUpperCase()}
                         </div>
                         <span className="text-xs text-gray-600 font-medium">
                           {message.senderName}
@@ -246,13 +271,14 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
                             onClick={() => setPreviewImage(message.attachmentUrl)}
                           />
                           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                            <a
-                              href={message.attachmentUrl}
-                              download
-                              className="bg-black/50 p-1 rounded-full text-white hover:bg-black"
+                            <button
+                              onClick={() =>
+                                handleFileDownload(message.attachmentUrl)
+                              }
+                              className="bg-black/50 p-1 rounded-full text-white hover:bg-black transition"
                             >
-                              <Download className="h-4 w-4" />
-                            </a>
+                              <Download className="h-6 w-6" />
+                            </button>
                           </div>
                         </div>
                       )}
@@ -260,14 +286,14 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
                       {message.type === "document" && (
                         <div className="flex items-center mt-2 text-sm">
                           <Paperclip className="h-4 w-4 mr-2 text-gray-400" />
-                          <a
-                            href={message.attachmentUrl}
-                            download
-                            target="_blank"
+                          <button
+                            onClick={() =>
+                              handleFileDownload(message.attachmentUrl)
+                            }
                             className="text-blue-600 hover:underline"
                           >
                             Download Document
-                          </a>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -331,7 +357,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
       )}
 
       {/* Input */}
-      <div className="bg-white p-4 border-t border-gray-200">
+      <div className="bg-white p-4 border-t border-gray-200 relative">
         <div className="flex items-end space-x-3">
           <div className="flex-1">
             <div className="relative">
@@ -339,7 +365,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message... (supports markdown links)"
+                placeholder="Type your message..."
                 className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-colors"
                 rows={1}
                 style={{ minHeight: "44px", maxHeight: "120px" }}
@@ -347,7 +373,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
 
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
                 <label className="p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
-                  <Image className="h-5 w-5" />
+                  <Paperclip className="h-5 w-5" />
                   <input
                     type="file"
                     className="hidden"
@@ -357,7 +383,11 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
                     accept="image/*,application/pdf,.doc,.docx,.txt"
                   />
                 </label>
-                <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                >
                   <Smile className="h-5 w-5" />
                 </button>
               </div>
@@ -372,6 +402,24 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
             <Send className="h-5 w-5" />
           </button>
         </div>
+
+        {/* Emoji Picker */}
+        {showEmojiPicker && (
+          <div className="absolute bottom-16 right-6 bg-white border rounded-lg shadow-md p-2 flex space-x-2">
+            <button
+              onClick={() => handleEmojiSelect("👍")}
+              className="text-2xl hover:scale-110 transition-transform"
+            >
+              👍
+            </button>
+            <button
+              onClick={() => handleEmojiSelect("❤️")}
+              className="text-2xl hover:scale-110 transition-transform"
+            >
+              ❤️
+            </button>
+          </div>
+        )}
 
         {/* File Preview */}
         {file && (

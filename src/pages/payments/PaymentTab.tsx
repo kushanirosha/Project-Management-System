@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Payment } from "../types/index";
-import { useAuth } from "../contexts/AuthContext";
-import { bankDetails } from "../data/dummyData";
+import { Payment } from "../../types/index";
+import { useAuth } from "../../contexts/AuthContext";
+import { bankDetails } from "../../data/dummyData";
 import { useParams } from "react-router-dom";
 
 import PaymentSummary from "./PaymentSummary";
 import BankDetails from "./BankDetails";
 import AdminActions from "./AdminActions";
 import PaymentList from "./PaymentList";
-import UploadQuotationModal from "../components/UploadQuotationModal";
-import UploadReceiptModal from "../components/UploadReceiptModal";
+import UploadQuotationModal from "../../components/UploadQuotationModal";
+import UploadReceiptModal from "../../components/UploadReceiptModal";
 
 const API_URL = "http://localhost:5000/api/payments";
 

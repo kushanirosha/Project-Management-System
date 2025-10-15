@@ -1,6 +1,6 @@
 import React from "react";
 import { Check, Clock, AlertCircle } from "lucide-react";
-import { Payment } from "../types/index";
+import { Payment } from "../../types/index";
 
 export const getStatusIcon = (status: Payment["status"]) => {
   switch (status) {
