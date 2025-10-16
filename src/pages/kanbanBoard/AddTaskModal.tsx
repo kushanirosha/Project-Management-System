@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Task } from "../../types";
+import API_BASE_URL from "../../config/apiConfig";
 
 interface AddTaskModalProps {
   projectId: string;
@@ -43,7 +44,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/kanban/${projectId}/tasks`,
+        `${API_BASE_URL}/api/kanban/${projectId}/tasks`,
         {
           method: "POST",
           body: formData,

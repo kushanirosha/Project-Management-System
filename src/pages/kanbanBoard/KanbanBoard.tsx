@@ -8,6 +8,7 @@ import AddTaskModal from "./AddTaskModal";
 import TaskDetailModal from "./TaskDetailModal";
 import TaskCard from "../../components/TaskCard";
 import toast, { Toaster } from "react-hot-toast";
+import API_BASE_URL from "../../config/apiConfig";
 
 const KanbanBoard: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -34,12 +35,12 @@ const KanbanBoard: React.FC = () => {
       if (!projectId) return;
 
       try {
-        const tasksRes = await fetch(`http://localhost:5000/api/kanban/${projectId}/tasks`);
+        const tasksRes = await fetch(`${API_BASE_URL}/api/kanban/${projectId}/tasks`);
         if (!tasksRes.ok) throw new Error("Failed to fetch tasks");
         const tasksData = await tasksRes.json();
         setTasks(tasksData);
 
-        const projectRes = await fetch(`http://localhost:5000/api/projects/${projectId}`);
+        const projectRes = await fetch(`${API_BASE_URL}/api/projects/${projectId}`);
         if (!projectRes.ok) throw new Error("Failed to fetch project");
         const projectData = await projectRes.json();
         setProjectStatus(projectData.status);
@@ -61,7 +62,7 @@ const KanbanBoard: React.FC = () => {
     const newStage = result.destination.droppableId as Task["stage"];
 
     try {
-      const res = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stage: newStage }),
@@ -79,7 +80,7 @@ const KanbanBoard: React.FC = () => {
   // Mark project as finished
   const markProjectFinished = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "finished", updatedAt: new Date() }),

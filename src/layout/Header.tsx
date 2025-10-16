@@ -5,6 +5,12 @@ import { useAuth } from '../contexts/AuthContext';
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
 
+  // Get first letter of user's name in uppercase
+  const getInitial = (name?: string) => {
+    if (!name) return '';
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 fixed w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -20,13 +26,15 @@ const Header: React.FC = () => {
           {/* User Menu */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-medium">
                 {user?.avatar ? (
                   <img
                     src={user.avatar}
                     alt={user.name}
-                    className="w-8 h-8 rounded-full object-cover"
+                    className="w-8 h-8 rounded-full object-cover text-white"
                   />
+                ) : user?.name ? (
+                  <span className="text-gray-700">{getInitial(user.name)}</span>
                 ) : (
                   <User className="h-5 w-5 text-gray-400" />
                 )}

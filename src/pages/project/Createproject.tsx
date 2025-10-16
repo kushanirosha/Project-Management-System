@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { PlusCircle, Link, FileUp, Image } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../../config/apiConfig";
 
 const CreateProject: React.FC = () => {
   const navigate = useNavigate();
@@ -22,42 +23,6 @@ const CreateProject: React.FC = () => {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "images" | "documents"
-  ) => {
-    if (e.target.files) {
-      setFormData((prev) => ({
-        ...prev,
-        resources: {
-          ...prev.resources,
-          [type]: [...prev.resources[type], ...Array.from(e.target.files)],
-        },
-      }));
-    }
-  };
-
-  const handleAddLink = () => {
-    setFormData((prev) => ({
-      ...prev,
-      resources: {
-        ...prev.resources,
-        links: [...prev.resources.links, ""],
-      },
-    }));
-  };
-
-  const handleLinkChange = (index: number, value: string) => {
-    setFormData((prev) => {
-      const newLinks = [...prev.resources.links];
-      newLinks[index] = value;
-      return {
-        ...prev,
-        resources: { ...prev.resources, links: newLinks },
-      };
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,7 +50,7 @@ const CreateProject: React.FC = () => {
     };
 
     try {
-      const res = await fetch("http://localhost:5000/api/projects", {
+      const res = await fetch(`${API_BASE_URL}/api/projects`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -129,10 +94,10 @@ const CreateProject: React.FC = () => {
       </div>
 
       {/* Form */}
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-6xl mx-auto px-6 py-10 flex justify-center">
         <form
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          className="w-full max-w-3xl space-y-6"
         >
           {/* Left Column */}
           <div className="space-y-6">
@@ -193,81 +158,17 @@ const CreateProject: React.FC = () => {
                 <option value="graphic">Graphic</option>
               </select>
             </div>
-          </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-[#3c405b] mb-4">Resources</h2>
-
-            {/* Images */}
+            {/* Submit */}
             <div>
-              <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
-                <Image className="w-5 h-5 text-[#3c405b]" />
-                Upload Images
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => handleFileChange(e, "images")}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 
-                file:rounded-lg file:border-0 file:text-sm file:font-semibold 
-                file:bg-[#3c405b] file:text-white hover:file:bg-[#2e3246]"
-              />
-            </div>
-
-            {/* Documents */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
-                <FileUp className="w-5 h-5 text-[#3c405b]" />
-                Upload Documents
-              </label>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx,.ppt,.pptx"
-                multiple
-                onChange={(e) => handleFileChange(e, "documents")}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 
-                file:rounded-lg file:border-0 file:text-sm file:font-semibold 
-                file:bg-[#3c405b] file:text-white hover:file:bg-[#2e3246]"
-              />
-            </div>
-
-            {/* Links */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
-                <Link className="w-5 h-5 text-[#3c405b]" />
-                Resource Links
-              </label>
-              {formData.resources.links.map((link, index) => (
-                <input
-                  key={index}
-                  type="url"
-                  value={link}
-                  onChange={(e) => handleLinkChange(index, e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-3 mb-2 shadow-sm focus:ring-2 focus:ring-[#3c405b] outline-none"
-                  placeholder="Enter resource link"
-                />
-              ))}
               <button
-                type="button"
-                onClick={handleAddLink}
-                className="text-sm text-[#3c405b] underline"
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 bg-[#3c405b] text-white font-medium py-4 rounded-lg shadow-lg hover:bg-[#2e3246] transition"
               >
-                + Add Link
+                <PlusCircle className="w-6 h-6" />
+                Create Project
               </button>
             </div>
-          </div>
-
-          {/* Submit */}
-          <div className="md:col-span-2">
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-[#3c405b] text-white font-medium py-4 rounded-lg shadow-lg hover:bg-[#2e3246] transition"
-            >
-              <PlusCircle className="w-6 h-6" />
-              Create Project
-            </button>
           </div>
         </form>
       </div>

@@ -4,8 +4,9 @@ import { Payment } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
 import { bankDetails } from "../../data/dummyData";
 import { useParams } from "react-router-dom";
+import API_BASE_URL from "../../config/apiConfig";
 
-const API_URL = "http://localhost:5000/api/payments";
+const API_URL = `${API_BASE_URL}/api/payments`;
 
 const PaymentTab: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -14,7 +15,6 @@ const PaymentTab: React.FC = () => {
 
   const [showUploadQuotation, setShowUploadQuotation] = useState(false);
   const [showUploadReceipt, setShowUploadReceipt] = useState<string | null>(null);
-  const [receiptAmount, setReceiptAmount] = useState<number | null>(null);
 
   const [quotationData, setQuotationData] = useState({
     amount: 0,
@@ -23,26 +23,27 @@ const PaymentTab: React.FC = () => {
   });
 
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptAmount, setReceiptAmount] = useState<number | null>(null);
 
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
   // ---------------- Fetch payments ----------------
-  useEffect(() => {
+  const fetchPayments = async () => {
     if (!projectId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}?projectId=${projectId}`);
+      const data = await res.json();
+      setPayments(data);
+    } catch (err) {
+      console.error("❌ Error fetching payments", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchPayments = async () => {
-      try {
-        const res = await fetch(`${API_URL}?projectId=${projectId}`);
-        const data = await res.json();
-        setPayments(data);
-      } catch (err) {
-        console.error("❌ Error fetching payments", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchPayments();
   }, [projectId]);
 
@@ -62,7 +63,6 @@ const PaymentTab: React.FC = () => {
 
       const newPayment = await res.json();
       setPayments((prev) => [...prev, newPayment]);
-
       setShowUploadQuotation(false);
       setQuotationData({ amount: 0, description: "", file: null });
     } catch (err) {
@@ -219,9 +219,14 @@ const PaymentTab: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Quotation */}
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Quotation</p>
                       {p.quotationUrl ? (
-                        <a href={p.quotationUrl} target="_blank" className="flex items-center text-blue-600 hover:text-blue-800 text-sm">
+                        <a
+                          href={`${API_BASE_URL}${p.quotationUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download
+                          className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
+                        >
                           <Download className="h-4 w-4 mr-1" /> View Quotation
                         </a>
                       ) : (
@@ -238,7 +243,13 @@ const PaymentTab: React.FC = () => {
                             <div key={i} className="flex items-center justify-between text-sm text-gray-700 border-b border-gray-200 py-1">
                               <div className="flex items-center gap-2">
                                 <Download className="h-4 w-4 text-blue-600" />
-                                <a href={r.receiptUrl} target="_blank" className="hover:text-blue-800">
+                                <a
+                                  href={`${API_BASE_URL}${r.receiptUrl}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  download
+                                  className="hover:text-blue-800"
+                                >
                                   ${r.amountPaid} - {new Date(r.paidAt).toLocaleDateString()}
                                 </a>
                               </div>

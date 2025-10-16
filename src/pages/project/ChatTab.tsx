@@ -11,12 +11,13 @@ import {
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import { Message } from "../../types";
+import API_BASE_URL from "../../config/apiConfig";
 
 interface ChatTabProps {
   projectId: string;
 }
 
-const API_URL = "http://localhost:5000/api/chat";
+const API_URL = `${API_BASE_URL}/api/chat`;
 
 const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -117,6 +118,30 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
     });
   };
 
+  // WhatsApp-style last activity
+  const formatLastActivity = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    const time = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    if (date.toDateString() === today.toDateString()) return `Today at ${time}`;
+    if (date.toDateString() === yesterday.toDateString()) return `Yesterday at ${time}`;
+    return (
+      date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }) + ` at ${time}`
+    );
+  };
+
   const groupMessagesByDate = (messages: Message[]) => {
     const groups: { [key: string]: Message[] } = {};
     messages.forEach((m) => {
@@ -174,7 +199,7 @@ const ChatTab: React.FC<ChatTabProps> = ({ projectId }) => {
           <h3 className="text-lg font-semibold text-[#3c405b]">Project Chat</h3>
           <p className="text-sm text-gray-600">
             {messages.length} messages • Last activity:{" "}
-            {lastMessageTime ? formatTime(lastMessageTime) : "No messages"}
+            {lastMessageTime ? formatLastActivity(lastMessageTime) : "No messages"}
           </p>
         </div>
         <button

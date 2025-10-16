@@ -16,7 +16,7 @@ const AuthScreen: React.FC = () => {
             <Palette className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-[#3c405b] mb-2">DesignFlow</h1>
-          <p className="text-gray-600">Professional project management for designers</p>
+          <p className="text-gray-600">Professional project management platform for Designers & Developers</p>
         </div>
 
         {/* Form Container */}

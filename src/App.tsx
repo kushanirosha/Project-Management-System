@@ -10,6 +10,7 @@ import ProjectDashboard from "./pages/project/ProjectDashboard";
 import CreateProject from "./pages/project/Createproject";
 import Header from "./layout/Header";
 import Footer from "./layout/Footer";
+import AssistantWidget from "./components/AssistantWidget";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -56,7 +57,8 @@ const AppContent: React.FC = () => {
             <div className="min-h-screen bg-gray-100">
               <Header />
               <ClientDashboard />
-
+              <Footer />
+              <AssistantWidget />
             </div>
           </PrivateRoute>
         }
@@ -68,7 +70,7 @@ const AppContent: React.FC = () => {
             <div className="min-h-screen bg-gray-100">
               <Header />
               <AdminDashboard />
-              <Footer/>
+              <Footer />
             </div>
           </PrivateRoute>
         }
@@ -78,7 +80,7 @@ const AppContent: React.FC = () => {
         element={
           <PrivateRoute>
             <ProjectDashboard />
-            <Footer/>
+            <Footer />
           </PrivateRoute>
         }
       />

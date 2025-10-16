@@ -1,4 +1,6 @@
-export const API_URL = "http://localhost:5000/api";
+import API_BASE_URL from "../../../config/apiConfig";
+
+export const API_URL = `${API_BASE_URL}/api`;
 export const STAGES = ["to do", "in progress", "review", "done"];
 
 export const formatDeadline = (deadline: string) => {

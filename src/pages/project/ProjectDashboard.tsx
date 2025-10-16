@@ -42,13 +42,12 @@ const ProjectDashboard: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-100 flex">
+    <div className="bg-gray-100 flex min-h-screen">
       {/* Sidebar */}
       <ProjectSidebar
         project={project}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onBack={() => navigate("/admin-dashboard")}
+        onTabChange={setActiveTab} // pass setActiveTab
       />
 
       {/* Main content */}
@@ -58,21 +57,23 @@ const ProjectDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-[#3c405b] capitalize">
-                {activeTab === "project" ? "Project Management" : activeTab}
+                {activeTab === "project"
+                  ? "Project Management"
+                  : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
               </h1>
               <p className="text-gray-600 mt-1">
-                {activeTab === "project" && "Manage tasks and track project progress"}
-                {activeTab === "payment" && "Handle payments and financial tracking"}
+                {activeTab === "project" &&
+                  "Manage tasks and track project progress"}
+                {activeTab === "payment" &&
+                  "Handle payments and financial tracking"}
                 {activeTab === "chat" && "Communicate with your team"}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Tab content with full height */}
-        <div className="flex-1 p-8 overflow-y-auto h-full">
-          {renderTabContent()}
-        </div>
+        {/* Tab content */}
+        <div className="flex-1 p-8 overflow-y-auto">{renderTabContent()}</div>
       </div>
     </div>
   );

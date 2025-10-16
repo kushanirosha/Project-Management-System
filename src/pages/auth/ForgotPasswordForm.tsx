@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Key, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import API_BASE_URL from '../../config/apiConfig';
 
 interface ForgotPasswordFormProps {
   onToggleForm: (form: 'login' | 'register' | 'forgot') => void;
@@ -43,7 +44,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onToggleForm })
     setError('');
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/verify-otp", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),

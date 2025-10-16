@@ -63,7 +63,7 @@ const AdminDashboard: React.FC = () => {
       if (!projects.length) return;
       try {
         const taskPromises = projects.map((p) =>
-          axios.get(`${API_URL}/projects/${p.id}/tasks`)
+          axios.get(`${API_URL}/kanban/${p.id}/tasks`)
         );
         const results = await Promise.all(taskPromises);
         const tasksByProject: { [key: string]: any[] } = {};
@@ -109,9 +109,9 @@ const AdminDashboard: React.FC = () => {
     const stage = getProjectStage(project.id);
     const stageIndex = STAGES.indexOf(stage);
     return {
-      current: stageIndex + 1,
+      current: stageIndex ,
       total: STAGES.length,
-      percent: ((stageIndex + 1) / STAGES.length) * 100,
+      percent: ((stageIndex ) / STAGES.length) * 100,
     };
   };
 

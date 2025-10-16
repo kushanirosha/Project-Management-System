@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Project, Task, Message, Payment } from '../types';
 import { useAuth } from './AuthContext';
+import API_BASE_URL from '../config/apiConfig';
 
 interface ProjectContextType {
   projects: Project[];
@@ -35,7 +36,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     const fetchProjects = async () => {
       if (!user) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/projects/client?clientId=${user.id}`);
+        const res = await fetch(`${API_BASE_URL}/api/projects/client?clientId=${user.id}`);
         const data: Project[] = await res.json();
 
         // Ensure payments field exists (since database doesn't have it yet)
@@ -59,7 +60,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/projects`);
+        const res = await fetch(`${API_BASE_URL}/api/projects`);
         const data: Project[] = await res.json();
 
         const formattedData = data.map(p => ({

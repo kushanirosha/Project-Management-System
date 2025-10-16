@@ -175,9 +175,9 @@ export const dummyProjects: Project[] = [
 ];
 
 export const bankDetails = {
-  bankName: 'Design Studio Bank',
-  accountName: 'Sarah Johnson Design Studio',
-  accountNumber: '1234567890',
-  routingNumber: 'Colombo',
+  bankName: 'Bank of Ceylone (BOC)',
+  accountName: 'GGPM Wijerathne',
+  accountNumber: '83777187',
+  routingNumber: 'Kandy',
   country: "Sri Lanka",
 };

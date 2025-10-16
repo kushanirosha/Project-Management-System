@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Link as LinkIcon, FileText } from "lucide-react";
 import { Task, TaskComment } from "../../types/index";
+import API_BASE_URL from "../../config/apiConfig";
 
 interface TaskDetailModalProps {
   task: Task;
@@ -70,7 +71,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const handleMoveTask = async (taskId: string, newStage: Task["stage"]) => {
     if (disableActions) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/kanban/tasks/${taskId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/kanban/tasks/${taskId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stage: newStage }),
@@ -98,7 +99,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     };
 
     try {
-      const res = await fetch(`http://localhost:5000/api/kanban/tasks/${taskId}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/kanban/tasks/${taskId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(comment),
@@ -168,7 +169,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <h5 className="text-sm font-medium text-gray-700 mb-1">Images</h5>
                   <div className="flex flex-wrap gap-4">
                     {task.resources.images.map((img) => {
-                      const imageUrl = `http://localhost:5000/uploads/${img}`;
+                      const imageUrl = `${API_BASE_URL}/uploads/${img}`;
                       const isDownloading = downloading[img];
                       return (
                         <div key={img} className="flex flex-col items-center">
@@ -238,7 +239,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       <li key={doc} className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-gray-500" />
                         <a
-                          href={`http://localhost:5000/uploads/${doc}`}
+                          href={`${API_BASE_URL}/uploads/${doc}`}
                           target="_blank"
                           rel="noreferrer"
                           className="text-blue-600 hover:underline text-sm"

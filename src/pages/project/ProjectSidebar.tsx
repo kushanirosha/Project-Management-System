@@ -9,30 +9,26 @@ interface ProjectSidebarProps {
   onTabChange: (tab: 'project' | 'payment' | 'chat') => void;
 }
 
-const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
-  project,
-  activeTab,
-  onTabChange
-}) => {
+const ProjectSidebar: React.FC<ProjectSidebarProps> = ({ project, activeTab, onTabChange }) => {
   const navigate = useNavigate();
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  // Format date to "MMM dd, yyyy"
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
-  };
 
-  const getCategoryColor = (category: 'web' | 'graphic') => {
-    return category === 'web' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
-  };
+  // Category badge colors
+  const getCategoryColor = (category: 'web' | 'graphic') =>
+    category === 'web' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
 
-  const getStatusColor = (status: 'ongoing' | 'finished') => {
-    return status === 'ongoing' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
-  };
+  // Status badge colors
+  const getStatusColor = (status: 'ongoing' | 'finished') =>
+    status === 'ongoing' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
 
-  // Calculate project timeline info
+  // Project timeline info
   const getProjectTimelineStatus = () => {
     const deadline = new Date(project.deadline);
     const updatedAt = new Date(project.updatedAt);
@@ -41,40 +37,17 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
     if (project.status === 'ongoing') {
       const diffTime = deadline.getTime() - now.getTime();
       const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (remainingDays > 0) {
-        return {
-          text: `${remainingDays} day${remainingDays > 1 ? 's' : ''} remaining until deadline`,
-          color: 'text-green-600',
-        };
-      } else {
-        return {
-          text: `Deadline passed ${Math.abs(remainingDays)} day${Math.abs(remainingDays) > 1 ? 's' : ''} ago`,
-          color: 'text-red-600',
-        };
-      }
+      if (remainingDays > 0)
+        return { text: `${remainingDays} day${remainingDays > 1 ? 's' : ''} remaining until deadline`, color: 'text-green-600' };
+      return { text: `Deadline passed ${Math.abs(remainingDays)} day${Math.abs(remainingDays) > 1 ? 's' : ''} ago`, color: 'text-red-600' };
     }
 
     if (project.status === 'finished') {
       const diffTime = updatedAt.getTime() - deadline.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 0) {
-        return {
-          text: `Completed the project ${Math.abs(diffDays)} day${Math.abs(diffDays) > 1 ? 's' : ''} before deadline`,
-          color: 'text-green-600',
-        };
-      } else if (diffDays === 0) {
-        return {
-          text: `Completed the project on the deadline date`,
-          color: 'text-blue-600',
-        };
-      } else {
-        return {
-          text: `Completed project ${diffDays} day${diffDays > 1 ? 's' : ''} after deadline`,
-          color: 'text-orange-600',
-        };
-      }
+      if (diffDays < 0) return { text: `Completed ${Math.abs(diffDays)} day${Math.abs(diffDays) > 1 ? 's' : ''} before deadline`, color: 'text-green-600' };
+      if (diffDays === 0) return { text: `Completed on the deadline`, color: 'text-blue-600' };
+      return { text: `Completed ${diffDays} day${diffDays > 1 ? 's' : ''} after deadline`, color: 'text-orange-600' };
     }
 
     return null;
@@ -82,18 +55,12 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
 
   const projectTimelineStatus = getProjectTimelineStatus();
 
-  // Handle back navigation based on role
   const handleBack = () => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem('user');
     const user = storedUser ? JSON.parse(storedUser) : null;
-
-    if (user?.role === "client") {
-      navigate("/client-dashboard");
-    } else if (user?.role === "admin") {
-      navigate("/admin-dashboard");
-    } else {
-      navigate("/"); // fallback
-    }
+    if (user?.role === 'client') navigate('/client-dashboard');
+    else if (user?.role === 'admin') navigate('/admin-dashboard');
+    else navigate('/');
   };
 
   return (
@@ -121,18 +88,12 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
 
       {/* Client Details */}
       <div className="p-6 border-b border-gray-200">
-        <h3 className="text-sm font-semibold text-[#2E3453] mb-4 uppercase tracking-wide">
-          Client Details
-        </h3>
+        <h3 className="text-sm font-semibold text-[#2E3453] mb-4 uppercase tracking-wide">Client Details</h3>
 
         <div className="flex items-center mb-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mr-3 text-white font-bold text-lg">
             {project.client.avatar ? (
-              <img
-                src={project.client.avatar}
-                alt={project.client.name}
-                className="w-12 h-12 rounded-full object-cover"
-              />
+              <img src={project.client.avatar} alt={project.client.name} className="w-12 h-12 rounded-full object-cover" />
             ) : (
               <span>{project.client.name?.charAt(0).toUpperCase()}</span>
             )}
@@ -150,24 +111,16 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <Phone className="h-4 w-4 mr-3" />
-            <span>{project.client.phone || "N/A"}</span>
+            <span>{project.client.phone || 'N/A'}</span>
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <Calendar className="h-4 w-4 mr-3" />
             <span>Due: {formatDate(project.deadline)}</span>
           </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <Tag className="h-4 w-4 mr-3" />
-            <span>Started: {formatDate(project.createdAt)}</span>
-          </div>
-
-          {/* Project Status Summary */}
           {projectTimelineStatus && (
             <div className="flex items-center text-sm mt-2">
               <Clock className="h-4 w-4 mr-3 text-gray-500" />
-              <span className={`${projectTimelineStatus.color} font-medium`}>
-                {projectTimelineStatus.text}
-              </span>
+              <span className={`${projectTimelineStatus.color} font-medium`}>{projectTimelineStatus.text}</span>
             </div>
           )}
         </div>
@@ -179,15 +132,14 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
           {[
             { id: 'project', label: 'Project', icon: Tag },
             { id: 'payment', label: 'Payment', icon: Calendar },
-            { id: 'chat', label: 'Chat', icon: User }
+            { id: 'chat', label: 'Chat', icon: User },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id as 'project' | 'payment' | 'chat')}
-              className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${activeTab === tab.id
-                  ? 'bg-[#3c405b] text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-                }`}
+              className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
+                activeTab === tab.id ? 'bg-[#3c405b] text-white' : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
               <tab.icon className="h-5 w-5 mr-3" />
               <span className="font-medium">{tab.label}</span>
@@ -198,12 +150,8 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
 
       {/* Project Description */}
       <div className="p-6 border-t border-gray-200">
-        <h4 className="text-sm font-semibold text-[#2E3453] mb-2 uppercase tracking-wide">
-          Description
-        </h4>
-        <p className="text-sm text-gray-600 leading-relaxed">
-          {project.description}
-        </p>
+        <h4 className="text-sm font-semibold text-[#2E3453] mb-2 uppercase tracking-wide">Description</h4>
+        <p className="text-sm text-gray-600 leading-relaxed">{project.description}</p>
       </div>
     </div>
   );

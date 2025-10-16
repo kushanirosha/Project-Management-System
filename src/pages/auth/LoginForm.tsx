@@ -8,14 +8,14 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
-  const [email, setEmail] = useState('admin@designstudio.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState(''); // empty
+  const [password, setPassword] = useState(''); // empty
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,15 +123,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
           Sign up
         </button>
       </div>
-
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <p className="text-xs text-gray-600 mb-2">Demo Accounts:</p>
-        <div className="space-y-1">
-          <p className="text-xs"><strong>Admin:</strong> admin@designstudio.com</p>
-          <p className="text-xs"><strong>Client:</strong> michael@techcorp.com</p>
-          <p className="text-xs"><strong>Password:</strong> password123</p>
-        </div>
+      <div className="mt-8 text-center text-gray-600 text-sm">
+        <p>
+          Powered by: {' '}
+          <a
+            href="https://www.ceyloncreative.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-gray-600 hover:text-blue-500 transition-colors"
+          >
+            Ceylon Creative (Pvt) Ltd
+          </a>
+        </p>
       </div>
+
     </div>
   );
 };

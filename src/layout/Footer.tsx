@@ -6,12 +6,12 @@ const Footer: React.FC = () => {
       <p>
         © {new Date().getFullYear()} All rights reserved | Powered by{" "}
         <a
-          href="https://www.ceylonecreative.com"
+          href="https://www.ceyloncreative.com"
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-600 hover:underline"
         >
-          Ceylone Creative (Pvt) Ltd
+          Ceylon Creative (Pvt) Ltd
         </a>
       </p>
     </footer>
