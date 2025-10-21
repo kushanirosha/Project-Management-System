@@ -27,7 +27,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onToggleForm })
     try {
       const success = await forgotPassword(email);
       if (success) {
-        setSuccess('OTP sent to your email. Use: 123456 (demo)');
+        setSuccess('OTP sent to your email.');
         setStep('otp');
       } else {
         setError('Email not found');
